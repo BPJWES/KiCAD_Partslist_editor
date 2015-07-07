@@ -16,6 +16,12 @@ def OpenFile():
 		f.close()
 		if data_test_dump[:-1] == "EESchema Schematic File Version 2":
 			#verify it conforms to KiCAD specs
+			if mainFile.getComponents():
+				#print(mainFile.getComponents())
+				#print("am deleting")
+				mainFile.deleteContents()
+				
+				#print(mainFile.getComponents())
 			f = open(filename)
 			mainFile.SetContents(f.readlines())
 			mainFile.setSchematicName("FlowRateControllerV2.sch")
@@ -27,8 +33,12 @@ def OpenFile():
 	else:
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
-	#for i in range (len(mainFile.getComponents())):
-	#	print(mainFile.getComponents()[i].getMouserLink())
+	
+	for i in range (len(mainFile.getComponents())):
+		if "?" in mainFile.getComponents()[i].GetAnnotation():
+			messagebox.showerror("Annotation Incomplete", "The program is unable to process unanotated components")
+			mainFile.deleteContents()
+			break
 	#mainFile.printprops()
 def GenerateCSV():
 	root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
@@ -123,7 +133,11 @@ def loadCSV():
 
 		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" in data_test_dump:
 			#verify it conforms to KiCAD Partslist-editor specs
+			if openCSVFile.getComponents():
+				openCSVFile.deleteContents()
+				
 			f = open(filename)
+			
 			openCSVFile.setContents(f.readlines())
 			#openCSVFile.printContents()
 			#openCSVFile.printLine(1)
@@ -137,15 +151,19 @@ def loadCSV():
 			f.close()
 			#mainFile.ParseComponents()
 		else:
-			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
 
 	else:
 		if filename:
-			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
+			
 def BuildNewSCH():
 	savePath = filedialog.asksaveasfilename(filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 	mainFile.ModifyNewSCHFile(0, openCSVFile,savePath)
-	
+
+def CleanMemory():
+	mainFile.deleteContents()
+	openCSVFile.deleteContents()
 root = Tk()
 
 
@@ -162,12 +180,14 @@ c = ttk.Button(root, text="Generate CSV", command=GenerateCSV)
 c.pack()
 d = ttk.Button(root, text="List Parts", command=listParts)
 d.pack()
-e = ttk.Button(root, text="Sort Parts", command = sortParts)# command=sortParts)
+e = ttk.Button(root, text="Sort Parts", command = sortParts)
 e.pack()
 f = ttk.Button(root, text="LoadCSV", command=loadCSV)
 f.pack()
 g = ttk.Button(root, text="SaveNewSCH", command=BuildNewSCH)
 g.pack()
+h = ttk.Button(root, text="CleanMemory", command=CleanMemory)
+h.pack()
 i = ttk.Button(root, text="End", command=Break)
 i.pack()
 

@@ -81,8 +81,6 @@ def getCleanLine(line_to_be_cleaned):
 		line_to_be_returned = line_to_be_cleaned
 	return line_to_be_returned
 
-
-
 class SCH_FILE(object):
 	def __init__(self):
 		self.contents = ""
@@ -266,6 +264,8 @@ class SCH_FILE(object):
 		f.close
 	def getSubCircuitName(self):
 		return self.subcircuits_names
+	def getSubCircuits(self):
+		return self.subcircuits
 	def ModifyNewSCHFile(self, oldSCHFile, CSV_FILE, savepath):
 		#this will break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		print(str(CSV_FILE.getNumberOfComponents()))
@@ -455,9 +455,23 @@ class SCH_FILE(object):
 			for i in range (len(self.contents)):
 				f.write(self.contents[i])
 			f.close			
-				
+	def deleteContents(self):
+		for p in range (len(self.subcircuits)):
+			# first delete subcircuits
+			self.subcircuits[0].deleteContents()
+		
+		for i in range (len(self.components)):
+			del self.components[0]
+		self.contents = ""
+		self.numb_of_comps = 0
+		self.subcircuits_names = []
+		self.number_of_subcircuits = 0
+		self.components = []
+		self.subcircuits = []
+		self.SchematicName = ""
+		
 class CSV_FILE(object):
-		def __init__(self):
+	def __init__(self):
 			self.contents = []
 			self.components = []
 			self.number_of_components = 0
@@ -468,20 +482,20 @@ class CSV_FILE(object):
 			self.name = ""
 			self.annotation = ""
 			self.value = ""
-		def setContents(self, to_be_inserted):
+	def setContents(self, to_be_inserted):
 				self.contents = to_be_inserted
-		def printContents(self):
+	def printContents(self):
 				print(self.contents)
-		def printLine(self, line):
+	def printLine(self, line):
 			print(self.contents[line])
-		def printComponents(self):
+	def printComponents(self):
 			for i in range (self.number_of_components):
 				print(self.components[i].getFarnellLink())
-		def getNumberOfComponents(self):
+	def getNumberOfComponents(self):
 			return self.number_of_components
-		def getComponents(self):
+	def getComponents(self):
 			return self.components
-		def generateCSVComponents(self):
+	def generateCSVComponents(self):
 			for i in range(1, len(self.contents)):
 				self.components.append(CSV_COMPONENT())
 				self.number_of_components = self.number_of_components + 1
@@ -519,7 +533,20 @@ class CSV_FILE(object):
 						#	print("test")
 						#print(counter)
 						positionLast = p + 1
-						#break
+	def deleteContents(self):
+		for i in range (len(self.components)):
+			del self.components[0]
+		self.contents = []
+		self.components = []
+		self.number_of_components = 0
+		self.startposition = 0
+		self.endposition = 0
+		self.FarnellLink = ""
+		self.SchematicName = ""
+		self.name = ""
+		self.annotation = ""
+		self.value = ""
+		#break
 class CSV_COMPONENT(object):
 	def __init__(self):
 		self.annotation = ""
