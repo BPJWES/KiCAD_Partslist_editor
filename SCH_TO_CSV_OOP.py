@@ -27,6 +27,8 @@ def OpenFile():
 	else:
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+	#for i in range (len(mainFile.getComponents())):
+	#	print(mainFile.getComponents()[i].getMouserLink())
 	#mainFile.printprops()
 def GenerateCSV():
 	root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
@@ -119,7 +121,7 @@ def loadCSV():
 		f.close()
 		#print(data_test_dump)
 
-		if "Part\#,PartType,FarnellLink,Found" in data_test_dump:
+		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" in data_test_dump:
 			#verify it conforms to KiCAD Partslist-editor specs
 			f = open(filename)
 			openCSVFile.setContents(f.readlines())
