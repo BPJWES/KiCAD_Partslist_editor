@@ -11,9 +11,15 @@ def OpenFile():
 	root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
-		f = open(filename)
-		data_test_dump = f.readlines()[0]
-		f.close()
+		try:
+			f = open(filename)
+		except IOError:
+			print("Error: can\'t find file or read data")
+		else:
+			mainFile.setPath(filename)
+			data_test_dump = f.readlines()[0]
+			f.close()
+			
 		if data_test_dump[:-1] == "EESchema Schematic File Version 2":
 			#verify it conforms to KiCAD specs
 			if mainFile.getComponents():
@@ -22,11 +28,16 @@ def OpenFile():
 				mainFile.deleteContents()
 				
 				#print(mainFile.getComponents())
-			f = open(filename)
-			mainFile.SetContents(f.readlines())
-			mainFile.setSchematicName("FlowRateControllerV2.sch")
-			f.close()
-			mainFile.ParseComponents()
+			try:
+				f = open(filename)
+			except IOError:
+				print("Error: can\'t find file or read data")
+			else:
+				mainFile.SetContents(f.readlines())
+				mainFile.setSchematicName("FlowRateControllerV2.sch")
+				f.close()
+				if mainFile.ParseComponents():
+					messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
 		else:
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
 
@@ -42,7 +53,8 @@ def OpenFile():
 	#mainFile.printprops()
 def GenerateCSV():
 	root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
-	mainFile.SaveBOMInCSV(root.path_to_save)
+	if mainFile.SaveBOMInCSV(root.path_to_save):
+		messagebox.showerror("File IOerror", "The file might still be opened")
 
 def Break():
 	root.quit()
@@ -126,10 +138,14 @@ def loadCSV():
 	root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
 	filename = root.filename
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
-		f = open(filename)
-		data_test_dump = f.readlines()[0]
-		f.close()
-		#print(data_test_dump)
+		try:
+			f = open(filename)
+		except IOError:
+			messagebox.showerror("File IO Error", ".SCH cannot be edited")
+		else:
+			data_test_dump = f.readlines()[0]
+			f.close()
+			#print(data_test_dump)
 
 		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" in data_test_dump:
 			#verify it conforms to KiCAD Partslist-editor specs
@@ -158,13 +174,25 @@ def loadCSV():
 			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
 			
 def BuildNewSCH():
-	savePath = filedialog.asksaveasfilename(filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
-	mainFile.ModifyNewSCHFile(0, openCSVFile,savePath)
+	if mainFile.getComponents() and openCSVFile.getComponents():
+		savePath = filedialog.asksaveasfilename(filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+		if savePath:
+			if mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
+				messagebox.showerror("File IO Error", ".SCH cannot be edited")
+	else:
+		if mainFile.getComponents():
+			messagebox.showerror("Processing Error", "No CSV File Loaded")
+		elif openCSVFile.getComponents():
+			messagebox.showerror("Processing Error", "No SCH File Loaded")
+		else:
+			messagebox.showerror("Processing Error", "No Files Loaded")
 
 def CleanMemory():
 	mainFile.deleteContents()
 	openCSVFile.deleteContents()
 root = Tk()
+
+#def mainloop():
 
 
 root.configure(background='white')
@@ -191,7 +219,10 @@ h.pack()
 i = ttk.Button(root, text="End", command=Break)
 i.pack()
 
-
+#while 1:
+#	root.update()
+#	print("hoi")
+# this is supposed to enable interactive interface (show if 
 mainloop()
 
 

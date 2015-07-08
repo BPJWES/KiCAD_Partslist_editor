@@ -31,6 +31,8 @@ class Component(object):
 		print(self.name)
 		print(self.annotation)
 		print(self.FarnellLink)
+		print(self.MouserLink)
+		print(self.DigiKeyLink)
 		print(self.value)
 		print(self.SchematicName)
 	def printall(self):
@@ -90,6 +92,11 @@ class SCH_FILE(object):
 		self.components = []
 		self.subcircuits = []
 		self.SchematicName = ""
+		self.path = ""
+	def setPath(self, path):
+		self.path = path
+	def getPath(self):
+		return self.path
 	def setSchematicName(self, x):
 		self.SchematicName = x
 	def getSchematicName(self):
@@ -216,13 +223,24 @@ class SCH_FILE(object):
 					break
 		
 		for subcircuitcounter in range(len(self.subcircuits_names)):
-			self.append_subcircuit(SCH_FILE())
-			f = open(self.subcircuits_names[subcircuitcounter])
-			self.get_subcircuit(subcircuitcounter).SetContents(f.readlines())
-			f.close()
-			self.get_subcircuit(subcircuitcounter).setSchematicName(self.subcircuits_names[subcircuitcounter])
-			self.get_subcircuit(subcircuitcounter).ParseComponents()			
-			self.AppendComponents(self.get_subcircuit(subcircuitcounter).getComponents())
+			
+			
+			for p in range (len(self.path)):
+				if self.path[-p] == "/":
+					break
+			to_open = self.path[:-p+1] + self.subcircuits_names[subcircuitcounter]
+			try:
+				f = open(to_open)
+			except IOError:
+				return "error"
+			else:
+				self.append_subcircuit(SCH_FILE())
+				self.get_subcircuit(subcircuitcounter).setPath(to_open)
+				self.get_subcircuit(subcircuitcounter).SetContents(f.readlines())
+				f.close()
+				self.get_subcircuit(subcircuitcounter).setSchematicName(self.subcircuits_names[subcircuitcounter])
+				self.get_subcircuit(subcircuitcounter).ParseComponents()			
+				self.AppendComponents(self.get_subcircuit(subcircuitcounter).getComponents())
 	def get_subcircuit(self, x):
 		return self.subcircuits[x]
 	def AppendComponents(self, componentList):
@@ -230,38 +248,43 @@ class SCH_FILE(object):
 			self.components.append(componentList[item])
 			self.numb_of_comps = self.get_number_of_components() + 1
 	def SaveBOMInCSV(self,savepath):
-		f = open(savepath, 'w')
-		f.write("Part\#")
-		f.write(",")
-		f.write("PartType")
-		f.write(",")
-		f.write("FarnellLink")
-		f.write(",")
-		f.write("MouserLink")
-		f.write(",")
-		f.write("DigiKeyLink")
-		f.write(",")
-		f.write("Found in: ")
-		f.write("\n")
-		for item in range(self.get_number_of_components()):#er stond -1
-			#print(str(item))
-			f.write(self.getComponents()[item].GetAnnotation())
+		try:
+			f = open(savepath, 'w')
+		except IOError:
+			if savepath:
+				return "error"
+		else:
+			f.write("Part\#")
 			f.write(",")
-			f.write(self.getComponents()[item].GetName())
+			f.write("PartType")
 			f.write(",")
-			f.write(self.getComponents()[item].GetFarnellLink())
+			f.write("FarnellLink")
 			f.write(",")
-			f.write(self.getComponents()[item].getMouserLink())
+			f.write("MouserLink")
 			f.write(",")
-			f.write(self.getComponents()[item].getDigiKeyLink())
+			f.write("DigiKeyLink")
 			f.write(",")
-			f.write(self.getComponents()[item].GetSchematicName())
-			f.write(",")#make conditional
-			f.write(str(self.getComponents()[item].getStartLine()))#make conditional
-			f.write(",")#make conditional
-			f.write(str(self.getComponents()[item].getEndLine()))#make conditional
+			f.write("Found in: ")
 			f.write("\n")
-		f.close
+			for item in range(self.get_number_of_components()):#er stond -1
+				#print(str(item))
+				f.write(self.getComponents()[item].GetAnnotation())
+				f.write(",")
+				f.write(self.getComponents()[item].GetName())
+				f.write(",")
+				f.write(self.getComponents()[item].GetFarnellLink())
+				f.write(",")
+				f.write(self.getComponents()[item].getMouserLink())
+				f.write(",")
+				f.write(self.getComponents()[item].getDigiKeyLink())
+				f.write(",")
+				f.write(self.getComponents()[item].GetSchematicName())
+				f.write(",")#make conditional
+				f.write(str(self.getComponents()[item].getStartLine()))#make conditional
+				f.write(",")#make conditional
+				f.write(str(self.getComponents()[item].getEndLine()))#make conditional
+				f.write("\n")
+			f.close
 	def getSubCircuitName(self):
 		return self.subcircuits_names
 	def getSubCircuits(self):
@@ -279,7 +302,7 @@ class SCH_FILE(object):
 						toAddDigikeyLink = " "
 						if CSV_FILE.getComponents()[i].getFarnellLink():
 							toAddFarnellLink = CSV_FILE.getComponents()[i].getFarnellLink()
-									
+							#print(toAddFarnellLink)
 						if CSV_FILE.getComponents()[i].getMouserLink():
 							toAddFarnellLink = CSV_FILE.getComponents()[i].getMouserLink()
 						
@@ -288,6 +311,7 @@ class SCH_FILE(object):
 						
 						
 						self.getComponents()[p].addNewInfo(toAddFarnellLink,toAddMouserLink,toAddDigikeyLink)
+						#self.getComponents()[p].printprops()
 						q = 0
 						#buffer = []
 						while self.contents[q+self.getComponents()[p].getStartLine()][0] != "F":
@@ -359,7 +383,7 @@ class SCH_FILE(object):
 						
 						elif "DigiKeyLink" in self.contents[q+self.getComponents()[p].getStartLine()]:
 							orignalBufferLine = ""
-							if "FarnellLink" in self.contents[q-2 + self.getComponents()[p].getStartLine()]: #is FarnellLink in Previous Line
+							if "FarnellLink" in self.contents[q-2 + self.getComponents()[p].getStartLine()]: #is FarnellLink in the line before previous Line
 								orignalBufferLine = getCleanLine(self.contents[q-3 + self.getComponents()[p].getStartLine()])
 								positions = []
 						
@@ -368,6 +392,8 @@ class SCH_FILE(object):
 										positions.append(r)
 																
 								self.contents[q-2+self.getComponents()[p].getStartLine()] = self.contents[q-2+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-2+self.getComponents()[p].getStartLine()][positions[-3]:]
+								print(self.getComponents()[p].GetAnnotation())
+								print(self.getComponents()[p].GetFarnellLink())
 								if "MouserLink" in self.contents[q - 1 + self.getComponents()[p].getStartLine()]:
 									positions = []
 						
@@ -375,7 +401,7 @@ class SCH_FILE(object):
 										if self.contents[q-1+self.getComponents()[p].getStartLine()][r] == "\"":
 											positions.append(r)
 																
-									self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
+									self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getMouserLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
 									#controleer
 								
 								
@@ -450,11 +476,24 @@ class SCH_FILE(object):
 							self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
 							MouserLine = self.contents[q+self.getComponents()[p].getStartLine()]
 							self.contents[q+self.getComponents()[p].getStartLine()] = MouserLine +  bufferstring[:2] + str(int(bufferstring[2])+3)+ bufferstring[3:5]+ self.getComponents()[p].getDigiKeyLink() + bufferstring[5:-1] + " \"DigiKeyLink\"" + "\n"
-						
-			f = open(savepath, 'w')
-			for i in range (len(self.contents)):
-				f.write(self.contents[i])
-			f.close			
+			try:
+				f = open(savepath, 'w')
+			except IOError:
+				return "error"
+			else:			
+				for i in range (len(self.contents)):
+					f.write(self.contents[i])
+				f.close
+				
+			for i in range(len(self.subcircuits)):
+				for p in range (len(savepath)):
+					if savepath[-p] == "/":
+						break #find first forwardslash to add other file name
+				
+				new_savepath = savepath[:-p+1]+self.subcircuits_names[i]
+				print("new_savepath")
+				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
+				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 	def deleteContents(self):
 		for p in range (len(self.subcircuits)):
 			# first delete subcircuits
@@ -469,6 +508,7 @@ class SCH_FILE(object):
 		self.components = []
 		self.subcircuits = []
 		self.SchematicName = ""
+		self.path = ""
 		
 class CSV_FILE(object):
 	def __init__(self):
