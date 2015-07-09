@@ -81,6 +81,14 @@ def getCleanLine(line_to_be_cleaned):
 	else :
 		#this line was clean
 		line_to_be_returned = line_to_be_cleaned
+	if "0000" in line_to_be_returned:
+		i = 0
+		for i in range (len(line_to_be_returned)-4):
+
+			if line_to_be_returned[i:i+4] == "0000":
+				break
+		
+		line_to_be_returned = line_to_be_returned[:i] + "0001" + line_to_be_returned[i+4 - len(line_to_be_returned):]
 	return line_to_be_returned
 
 class SCH_FILE(object):
