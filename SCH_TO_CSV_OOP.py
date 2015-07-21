@@ -10,6 +10,7 @@ def OpenFile():
     #print "click!"
 	root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
+	root.SCHFILELAST = filename
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
 		try:
 			f = open(filename)
@@ -52,10 +53,13 @@ def OpenFile():
 			break
 	#mainFile.printprops()
 def GenerateCSV():
-	root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
-	if mainFile.SaveBOMInCSV(root.path_to_save):
-		messagebox.showerror("File IOerror", "The file might still be opened")
-
+	if mainFile.get_number_of_components() > 0:
+		root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
+		sortParts()
+		if mainFile.SaveBOMInCSV(root.path_to_save):
+			messagebox.showerror("File IOerror", "The file might still be opened")
+	else:
+		messagebox.showerror("Cannot generate .CSV", "No SCH File loaded")
 def Break():
 	root.quit()
 	
@@ -131,7 +135,6 @@ def sortParts():
 		for p in range(i, mainFile.get_number_of_components()):
 			if componentNameList[i] == mainFile.getComponents()[p].GetAnnotation():
 				mainFile.SwapComponents(i,p)
-	listParts()
 	
 def loadCSV():
 	#print("tbg")
@@ -172,10 +175,12 @@ def loadCSV():
 	else:
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
-			
+#	for i in openCSVFile.getComponents():
+#		i.printprops()
 def BuildNewSCH():
 	if mainFile.getComponents() and openCSVFile.getComponents():
-		savePath = filedialog.asksaveasfilename(filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+		print(root.SCHFILELAST)
+		savePath = filedialog.asksaveasfilename(initialdir = root.SCHFILELAST, initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		if savePath:
 			if mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")

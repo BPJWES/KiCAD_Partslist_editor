@@ -304,21 +304,28 @@ class SCH_FILE(object):
 		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
 			for i in range (CSV_FILE.getNumberOfComponents()):
 				for p in range (self.get_number_of_components()):
-					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.SchematicName ==  CSV_FILE.getComponents()[i].getSchematic(): # dit gaat stuk om subcircuits
+					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.SchematicName ==  CSV_FILE.getComponents()[i].getSchematic(): 
 						toAddFarnellLink = " "
 						toAddMouserLink = " "
 						toAddDigikeyLink = " "
-						if CSV_FILE.getComponents()[i].getFarnellLink():
+						if len(CSV_FILE.getComponents()[i].getFarnellLink()) > 1:
+							print("test")
 							toAddFarnellLink = CSV_FILE.getComponents()[i].getFarnellLink()
-							#print(toAddFarnellLink)
-						if CSV_FILE.getComponents()[i].getMouserLink():
-							toAddFarnellLink = CSV_FILE.getComponents()[i].getMouserLink()
+							print(toAddFarnellLink)
+						if len(CSV_FILE.getComponents()[i].getMouserLink())>1:
+							toAddMouserLink = CSV_FILE.getComponents()[i].getMouserLink()
 						
-						if CSV_FILE.getComponents()[i].getDigiKeyLink():
+						if len(CSV_FILE.getComponents()[i].getDigiKeyLink())>1:
 							toAddDigikeyLink = CSV_FILE.getComponents()[i].getDigiKeyLink()
 						
 						
 						self.getComponents()[p].addNewInfo(toAddFarnellLink,toAddMouserLink,toAddDigikeyLink)
+						#print(self.getComponents()[p].GetAnnotation())
+						#print(self.getComponents()[p].GetFarnellLink())
+						if self.getComponents()[p].GetAnnotation() == "U2" :
+							print("kbenbourns")
+							print(self.getComponents()[i].GetFarnellLink())
+						
 						#self.getComponents()[p].printprops()
 						q = 0
 						#buffer = []
@@ -400,8 +407,7 @@ class SCH_FILE(object):
 										positions.append(r)
 																
 								self.contents[q-2+self.getComponents()[p].getStartLine()] = self.contents[q-2+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-2+self.getComponents()[p].getStartLine()][positions[-3]:]
-								print(self.getComponents()[p].GetAnnotation())
-								print(self.getComponents()[p].GetFarnellLink())
+								
 								if "MouserLink" in self.contents[q - 1 + self.getComponents()[p].getStartLine()]:
 									positions = []
 						
@@ -411,7 +417,14 @@ class SCH_FILE(object):
 																
 									self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getMouserLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
 									#controleer
-								
+								if "DigiKeyLink" in self.contents[q + self.getComponents()[p].getStartLine()]:
+									positions = []
+						
+									for r in range(len(self.contents[q + self.getComponents()[p].getStartLine()])):
+										if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
+											positions.append(r)
+																
+									self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
 								
 								
 								
@@ -468,10 +481,11 @@ class SCH_FILE(object):
 								
 								#print(positions)
 								#print(self.contents[q+self.getComponents()[p].getStartLine()])
+								bufferstring = getCleanLine(self.contents[q - 1 +self.getComponents()[p].getStartLine()]) #could be wrong if value exist in last line
 								self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q +self.getComponents()[p].getStartLine()][:2] + str(int(bufferstring[2])+3) + self.contents[q+self.getComponents()[p].getStartLine()][3:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
 								
 								
-								bufferstring = getCleanLine(self.contents[q - 1 +self.getComponents()[p].getStartLine()]) #could be wrong if value exist in last line
+								#bufferstring = getCleanLine(self.contents[q - 1 +self.getComponents()[p].getStartLine()]) #could be wrong if value exist in last line
 								self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()] +  bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].GetFarnellLink() + bufferstring[5:-1] + " \"FarnellLink\"" + "\n"
 								FarnellLine = self.contents[q -1 +self.getComponents()[p].getStartLine()]
 								self.contents[q -1 +self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
@@ -606,6 +620,12 @@ class CSV_COMPONENT(object):
 		self.schematic = ""
 		self.startLine = ""
 		self.endLine = ""
+	def printprops(self):
+		print(self.annotation)
+		print(self.FarnellLink)
+		#print(self.MouserLink)
+		#print(self.DigiKeyLink)
+		#print(self.DigiKeyLink)
 	def setName(self,name):
 		self.name = name
 	def getName(self):
