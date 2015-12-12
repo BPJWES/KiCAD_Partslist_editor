@@ -24,21 +24,30 @@ def OpenFile():
 		if data_test_dump[:-1] == "EESchema Schematic File Version 2":
 			#verify it conforms to KiCAD specs
 			if mainFile.getComponents():
-				#print(mainFile.getComponents())
-				#print("am deleting")
 				mainFile.deleteContents()
-
-				#print(mainFile.getComponents())
 			try:
 				f = open(filename)
 			except IOError:
 				print("Error: can\'t find file or read data")
 			else:
 				mainFile.SetContents(f.readlines())
-				mainFile.setSchematicName("FlowRateControllerV2.sch")
+
+				for i  in range(len(filename)): # get the last part of the file path
+
+					if "/" in filename[len(filename)-1-i]:
+						mainFile.setSchematicName(filename[len(filename)-i:])
+						break
+					#if "\" in filename[len(filename)-1-i]: UNIX PATH SUPPORT ??
+					#	mainFile.setSchematicName(filename[len(filename)-i:])
+					#	print(mainFile.getSchematicName())
+					#	break
 				f.close()
 				if mainFile.ParseComponents():
-					messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+					if(len(mainFile.getSubCircuits()) != len(mainFile.getSubCircuitName())):
+						messagebox.showerror("FileParseError", "Hierarchical schematics could not be found")
+					else:
+						messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+
 		else:
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
 

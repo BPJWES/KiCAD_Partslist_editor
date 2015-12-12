@@ -251,6 +251,7 @@ class SCH_FILE(object):
 				self.AppendComponents(self.get_subcircuit(subcircuitcounter).getComponents())
 	def get_subcircuit(self, x):
 		return self.subcircuits[x]
+	
 	def AppendComponents(self, componentList):
 		for item in range(len(componentList)):
 			self.components.append(componentList[item])
@@ -309,35 +310,26 @@ class SCH_FILE(object):
 						toAddMouserLink = " "
 						toAddDigikeyLink = " "
 						if len(CSV_FILE.getComponents()[i].getFarnellLink()) > 1:
-							print("test")
+
 							toAddFarnellLink = CSV_FILE.getComponents()[i].getFarnellLink()
-							print(toAddFarnellLink)
+
 						if len(CSV_FILE.getComponents()[i].getMouserLink())>1:
 							toAddMouserLink = CSV_FILE.getComponents()[i].getMouserLink()
-						
+
 						if len(CSV_FILE.getComponents()[i].getDigiKeyLink())>1:
 							toAddDigikeyLink = CSV_FILE.getComponents()[i].getDigiKeyLink()
-						
-						
+
 						self.getComponents()[p].addNewInfo(toAddFarnellLink,toAddMouserLink,toAddDigikeyLink)
-						#print(self.getComponents()[p].GetAnnotation())
-						#print(self.getComponents()[p].GetFarnellLink())
-						if self.getComponents()[p].GetAnnotation() == "U2" :
-							print("kbenbourns")
-							print(self.getComponents()[i].GetFarnellLink())
-						
-						#self.getComponents()[p].printprops()
+
 						q = 0
-						#buffer = []
+
 						while self.contents[q+self.getComponents()[p].getStartLine()][0] != "F":
-						#	buffer.append(self.contents[q+self.getComponents()[p].getStartLine()])
+
 							q = q + 1
 						while self.contents[q+self.getComponents()[p].getStartLine()][0] == "F":
-						#	buffer.append(self.contents[q+self.getComponents()[p].getStartLine()])
+
 							q = q + 1
-							#if "FarnellLink" in self.contents[q+self.getComponents()[p].getStartLine()]:
-							#	break
-													
+
 						q= q -1
 						if "FarnellLink" in self.contents[q+self.getComponents()[p].getStartLine()]:
 							positions = []
