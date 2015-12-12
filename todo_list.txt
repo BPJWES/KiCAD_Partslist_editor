@@ -4,5 +4,10 @@ todolist add value capability i.e. reading in the value field from a csv file
 #add relative paths 
 #add annotation checking - done
 #add delete functionality -done
-make sure the links will be hidden
-fix schematic name
+#make sure the links will be hidden
+#fix schematic name
+#remember paths for saving and opening files during a session
+#auto add .csv extension for filename
+remember paths between sessions
+make suggested filenames
+

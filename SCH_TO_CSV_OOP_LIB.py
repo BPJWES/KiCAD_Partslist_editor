@@ -257,10 +257,12 @@ class SCH_FILE(object):
 			self.components.append(componentList[item])
 			self.numb_of_comps = self.get_number_of_components() + 1
 	def SaveBOMInCSV(self,savepath):
+		if not '.csv' in savepath:
+			savepath = savepath + '.csv'
 		try:
 			f = open(savepath, 'w')
 		except IOError:
-			if savepath:
+			if savepath:	
 				return "error"
 		else:
 			f.write("Part\#")

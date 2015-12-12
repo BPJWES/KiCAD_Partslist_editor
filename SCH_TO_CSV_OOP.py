@@ -4,13 +4,24 @@ from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
 
+
 mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
 openCSVFile = SCH_TO_CSV_OOP_LIB.CSV_FILE()
+initialDirectory = "" 
+
+
 def OpenFile():
     #print "click!"
-	root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
+	global initialDirectory
+	if initialDirectory == "": 
+		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
+	else:
+		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
 	root.SCHFILELAST = filename
+	initialDirectory = setInitialDirectory(filename)
+
+	
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
 		try:
 			f = open(filename)
@@ -57,13 +68,23 @@ def OpenFile():
 
 	for i in range (len(mainFile.getComponents())):
 		if "?" in mainFile.getComponents()[i].GetAnnotation():
-			messagebox.showerror("Annotation Incomplete", "The program is unable to process unanotated components")
-			mainFile.deleteContents()
+			if messagebox.askyesno("Annotation Incomplete", "The program is unable to process unanotated components. Do you want to clear imported data?"):
+				mainFile.deleteContents()
+			#messagebox.showerror("Annotation Incomplete", "The program is unable to process unanotated components")
+			#mainFile.deleteContents()
 			break
 	#mainFile.printprops()
+def setInitialDirectory(filename):
+	for i  in range(len(filename)): # get the last part of the file path
+				if "/" in filename[len(filename)-1-i]:
+					mainFile.setSchematicName(filename[len(filename)-i:])
+					return filename[:len(filename)-i-1]
+					break
 def GenerateCSV():
+	global initialDirectory
 	if mainFile.get_number_of_components() > 0:
-		root.path_to_save = filedialog.asksaveasfilename(filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
+		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
+		initialDirectory = setInitialDirectory(root.path_to_save)
 		sortParts()
 		if mainFile.SaveBOMInCSV(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
@@ -146,9 +167,13 @@ def sortParts():
 				mainFile.SwapComponents(i,p)
 
 def loadCSV():
-	#print("tbg")
-	root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
+	global initialDirectory
+	if initialDirectory == "": 
+		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
+	else:
+		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
 	filename = root.filename
+	initialDirectory = setInitialDirectory(filename)
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
 		try:
 			f = open(filename)
@@ -187,9 +212,11 @@ def loadCSV():
 #	for i in openCSVFile.getComponents():
 #		i.printprops()
 def BuildNewSCH():
+	global initialDirectory
 	if mainFile.getComponents() and openCSVFile.getComponents():
 		print(root.SCHFILELAST)
-		savePath = filedialog.asksaveasfilename(initialdir = root.SCHFILELAST, initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+		
 		if savePath:
 			if mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
