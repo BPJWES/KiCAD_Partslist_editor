@@ -27,6 +27,8 @@ class Component(object):
 		return self.annotation
 	def Value(self,x):
 		self.value = x
+	def GetValue(self):
+		return self.value	
 	def printprops(self):
 		print(self.name)
 		print(self.annotation)
@@ -184,6 +186,24 @@ class SCH_FILE(object):
 									LastComponent.SetAnnotation(content[count][-(i):-1])
 									LastComponent.SetName(content[count][2:-(i+1)])
 									break
+									
+					if "F 1 " in content[count] : #find f1 indicating value field in EEschema file format
+						testvar = 0
+						
+						for i in range(len(content[count])):
+							if content[count][i] == "\"":
+								if testvar == 0:
+									startOfString = i+1
+									testvar = 1
+								else:
+									endOfString = i
+									
+									break
+						LastComponent.Value(content[count][startOfString:endOfString])			
+						#LastComponent.printprops() debug only
+						
+					
+					
 					if "FarnellLink" in content[count] or "farnelllink" in content[count] or "Farnelllink" in content[count] or "farnellLink" in content[count] : 
 						testvar = 0
 						
@@ -294,6 +314,8 @@ class SCH_FILE(object):
 				f.write(str(self.getComponents()[item].getStartLine()))#make conditional
 				f.write(",")#make conditional
 				f.write(str(self.getComponents()[item].getEndLine()))#make conditional
+				f.write(",")
+				f.write(str(self.getComponents()[item].GetValue()))
 				f.write("\n")
 			f.close
 	def getSubCircuitName(self):
@@ -304,6 +326,9 @@ class SCH_FILE(object):
 		#this will break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		print(str(CSV_FILE.getNumberOfComponents()))
 		print(str(self.get_number_of_components()))
+		#print("BPJTESTSR1")
+		#print(self.SchematicName)
+		#print("BPJTESTSR2")
 		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
 			for i in range (CSV_FILE.getNumberOfComponents()):
 				for p in range (self.get_number_of_components()):
@@ -492,6 +517,7 @@ class SCH_FILE(object):
 							self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
 							MouserLine = self.contents[q+self.getComponents()[p].getStartLine()]
 							self.contents[q+self.getComponents()[p].getStartLine()] = MouserLine +  bufferstring[:2] + str(int(bufferstring[2])+3)+ bufferstring[3:5]+ self.getComponents()[p].getDigiKeyLink() + bufferstring[5:-1] + " \"DigiKeyLink\"" + "\n"
+				
 			try:
 				f = open(savepath, 'w')
 			except IOError:

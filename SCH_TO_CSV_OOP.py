@@ -12,14 +12,14 @@ initialDirectory = ""
 
 def OpenFile():
     #print "click!"
-	global initialDirectory
+	initialDirectory = root.initialDirectory
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	else:
 		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
 	root.SCHFILELAST = filename
-	initialDirectory = setInitialDirectory(filename)
+
 
 	
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
@@ -70,10 +70,11 @@ def OpenFile():
 		if "?" in mainFile.getComponents()[i].GetAnnotation():
 			if messagebox.askyesno("Annotation Incomplete", "The program is unable to process unanotated components. Do you want to clear imported data?"):
 				mainFile.deleteContents()
-			#messagebox.showerror("Annotation Incomplete", "The program is unable to process unanotated components")
-			#mainFile.deleteContents()
+
 			break
-	#mainFile.printprops()
+	root.initialDirectory = setInitialDirectory(filename)
+	
+	
 def setInitialDirectory(filename):
 	for i  in range(len(filename)): # get the last part of the file path
 				if "/" in filename[len(filename)-1-i]:
@@ -81,10 +82,10 @@ def setInitialDirectory(filename):
 					return filename[:len(filename)-i-1]
 					break
 def GenerateCSV():
-	global initialDirectory
+	initialDirectory = root.initialDirectory
 	if mainFile.get_number_of_components() > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
-		initialDirectory = setInitialDirectory(root.path_to_save)
+		root.initialDirectory = initialDirectory = setInitialDirectory(root.path_to_save)
 		sortParts()
 		if mainFile.SaveBOMInCSV(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
@@ -167,13 +168,18 @@ def sortParts():
 				mainFile.SwapComponents(i,p)
 
 def loadCSV():
-	global initialDirectory
+	initialDirectory = root.initialDirectory
+	mainFile.printprops()
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
 	else:
 		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
+	
 	filename = root.filename
-	initialDirectory = setInitialDirectory(filename)
+	
+	#root.initialDirectory = setInitialDirectory(filename) this breaks changes mainFile.schematicname
+	
+	
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
 		try:
 			f = open(filename)
@@ -211,14 +217,15 @@ def loadCSV():
 			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
 #	for i in openCSVFile.getComponents():
 #		i.printprops()
+	
 def BuildNewSCH():
-	global initialDirectory
+	initialDirectory = root.initialDirectory
 	if mainFile.getComponents() and openCSVFile.getComponents():
 		print(root.SCHFILELAST)
 		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
+			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 	else:
 		if mainFile.getComponents():
@@ -227,15 +234,15 @@ def BuildNewSCH():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")
-
 def CleanMemory():
 	mainFile.deleteContents()
 	openCSVFile.deleteContents()
 root = Tk()
 
+
 #def mainloop():
 
-
+root.initialDirectory = ""
 root.configure(background='white')
 root.title("KiCAD Partslist-editor")
 root.bind("<Escape>", lambda e: e.widget.quit())
@@ -249,7 +256,7 @@ c = ttk.Button(root, text="Generate CSV", command=GenerateCSV)
 c.pack()
 d = ttk.Button(root, text="List Parts", command=listParts)
 d.pack()
-e = ttk.Button(root, text="Sort Parts", command = sortParts)
+e = ttk.Button(root, text="Sort Parts", command=sortParts)
 e.pack()
 f = ttk.Button(root, text="LoadCSV", command=loadCSV)
 f.pack()
