@@ -190,7 +190,7 @@ def loadCSV():
 			f.close()
 			#print(data_test_dump)
 
-		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" in data_test_dump:
+		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in data_test_dump:
 			#verify it conforms to KiCAD Partslist-editor specs
 			if openCSVFile.getComponents():
 				openCSVFile.deleteContents()
@@ -201,7 +201,11 @@ def loadCSV():
 			#openCSVFile.printContents()
 			#openCSVFile.printLine(1)
 
-			openCSVFile.generateCSVComponents()
+			if openCSVFile.generateCSVComponents():
+				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
+			else:
+				messagebox.showinfo("Import Complete",str(openCSVFile.getNumberOfComponents()) + " components were imported.")
+			
 			#openCSVFile.printComponents()
 			#for i in range (len(mainFile.getComponents())):
 			#	print(mainFile.getComponents()[i].GetAnnotation())

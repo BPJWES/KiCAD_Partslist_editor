@@ -578,43 +578,84 @@ class CSV_FILE(object):
 	def getComponents(self):
 			return self.components
 	def generateCSVComponents(self):
-			for i in range(1, len(self.contents)):
-				self.components.append(CSV_COMPONENT())
-				self.number_of_components = self.number_of_components + 1
-				counter = 0
-				for p in range(len(self.contents[i])):
-					if self.contents[i][p] == ",":
-						#print("hoi")
-						position = p
-						if counter == 0:
-							self.components[i-1].setAnnotation(self.contents[i][0:p])
-							counter = counter + 1
-						elif counter == 1:
-							self.components[i-1].setName(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 2:
-							self.components[i-1].setFarnellLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 3:
-							self.components[i-1].setMouserLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 4:
-							self.components[i-1].setDigiKeyLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 5:
-							self.components[i-1].setSchematic(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 6:
-							self.components[i-1].setStartLine(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 7:
-							self.components[i-1].setEndLine(self.contents[i][positionLast:position])
-							counter = counter + 1
-						
-							#print(self.contents[i][positionLast:position])
-						#	print("test")
-						#print(counter)
-						positionLast = p + 1
+			if "," in self.contents[1]:
+				for i in range(1, len(self.contents)):
+					self.components.append(CSV_COMPONENT())
+					self.number_of_components = self.number_of_components + 1
+					counter = 0
+					for p in range(len(self.contents[i])):
+						if self.contents[i][p] == ",":
+							#print("hoi")
+							position = p
+							if counter == 0:
+								self.components[i-1].setAnnotation(self.contents[i][0:p])
+								counter = counter + 1
+							elif counter == 1:
+								self.components[i-1].setName(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 2:
+								self.components[i-1].setFarnellLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 3:
+								self.components[i-1].setMouserLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 4:
+								self.components[i-1].setDigiKeyLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 5:
+								self.components[i-1].setSchematic(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 6:
+								self.components[i-1].setStartLine(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 7:
+								self.components[i-1].setEndLine(self.contents[i][positionLast:position])
+								counter = counter + 1
+							
+								#print(self.contents[i][positionLast:position])
+							#	print("test")
+							#print(counter)
+							positionLast = p + 1
+			elif ";" in self.contents[1]:
+				for i in range(1, len(self.contents)):
+					self.components.append(CSV_COMPONENT())
+					self.number_of_components = self.number_of_components + 1
+					counter = 0
+					for p in range(len(self.contents[i])):
+						if self.contents[i][p] == ",":
+							#print("hoi")
+							position = p
+							if counter == 0:
+								self.components[i-1].setAnnotation(self.contents[i][0:p])
+								counter = counter + 1
+							elif counter == 1:
+								self.components[i-1].setName(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 2:
+								self.components[i-1].setFarnellLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 3:
+								self.components[i-1].setMouserLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 4:
+								self.components[i-1].setDigiKeyLink(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 5:
+								self.components[i-1].setSchematic(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 6:
+								self.components[i-1].setStartLine(self.contents[i][positionLast:position])
+								counter = counter + 1
+							elif counter == 7:
+								self.components[i-1].setEndLine(self.contents[i][positionLast:position])
+								counter = counter + 1
+							
+								#print(self.contents[i][positionLast:position])
+							#	print("test")
+							#print(counter)
+							positionLast = p + 1
+			else:
+				return 'error'
 	def deleteContents(self):
 		for i in range (len(self.components)):
 			del self.components[0]
