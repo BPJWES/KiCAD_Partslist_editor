@@ -76,7 +76,19 @@ class Component(object):
 					if Alias in self.Contents[line_nr]:
 						print(Alias)
 						#print(self.Contents[line_nr])
-						self.PropertyList.append([anyField.name,self.Contents[line_nr]])
+						#find content
+						testvar = 0
+						for i in range(len(self.Contents[line_nr])):
+							if self.Contents[line_nr][i] == "\"":
+								if testvar == 0:
+									startOfString = i+1
+									testvar = 1
+								else:
+									endOfString = i
+									break
+						Data = self.Contents[line_nr][startOfString:endOfString]
+						
+						self.PropertyList.append([anyField.name,Data])
 						#print(self.PropertyList)
 					
 	def addNewInfo(self, FarnellLink, MouserLink, DigiKeyLink):
@@ -228,8 +240,6 @@ class SCH_FILE(object):
 									
 									break
 						LastComponent.Value(content[count][startOfString:endOfString])			
-						#LastComponent.printprops() debug only
-						
 					
 					
 					if "FarnellLink" in content[count] or "farnelllink" in content[count] or "Farnelllink" in content[count] or "farnellLink" in content[count] : 
@@ -305,6 +315,46 @@ class SCH_FILE(object):
 		for item in range(len(componentList)):
 			self.components.append(componentList[item])
 			self.numb_of_comps = self.get_number_of_components() + 1
+	def SaveBOMInCSVNew(self,savepath):
+	#New variant which allows for user configurable field names
+		if not '.csv' in savepath:
+			savepath = savepath + '.csv'
+		try:
+			f = open(savepath, 'w')
+		except IOError:
+			if savepath:	
+				return "error"
+		else:
+			f.write("Part\#")
+			f.write(",")
+			f.write("PartType")
+			f.write(",")
+			for field in self.fieldList:
+				f.write(field.name)
+				f.write(",")
+			f.write("Found in: ")
+			f.write("\n")
+			for item in range(self.get_number_of_components()):
+				#Add Line with component and fields
+				f.write(self.getComponents()[item].GetAnnotation())
+				f.write(",")
+				f.write(self.getComponents()[item].GetName())
+				f.write(",")
+				for field in self.fieldList:
+				#match fields to component.field
+					for counter in range(len(self.getComponents()[item].PropertyList)):
+						print(self.getComponents()[item].PropertyList[counter][0])
+						print(field.name)
+						if self.getComponents()[item].PropertyList[counter][0] == field.name:
+							f.write(self.getComponents()[item].PropertyList[counter][1])
+							f.write(",")
+							break
+					else:
+						f.write("")
+						f.write(",")
+				f.write(self.getComponents()[item].GetSchematicName())
+				f.write("\n")
+			f.close
 	def SaveBOMInCSV(self,savepath):
 		if not '.csv' in savepath:
 			savepath = savepath + '.csv'

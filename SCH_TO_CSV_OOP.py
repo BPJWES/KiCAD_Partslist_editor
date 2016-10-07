@@ -20,7 +20,6 @@ def ReadSettings():
 	except IOError:
 		print("Error: can\'t find file or read data")
 	configfile = f.readlines()
-	#print(configfile)
 	if "KiCAD PLE Config file v1.0" in configfile[0]:
 		
 		for line in range(1, len(configfile)-1):
