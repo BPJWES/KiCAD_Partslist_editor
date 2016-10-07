@@ -9,6 +9,10 @@ class Component(object):
 		self.value = ""
 		self.MouserLink = ""
 		self.DigiKeyLink = ""
+		# refactor the field extraction
+		self.PropertyList = []
+		self.Contents = ""
+		self.fieldList = [];
 	def startpos(self, x):
 		self.startposition = x
 	def endpos(self,x):
@@ -61,6 +65,20 @@ class Component(object):
 		self.DigiKeyLink = DigiKeyLink
 	def getDigiKeyLink(self):
 		return self.DigiKeyLink
+	def generateProperties(self):
+		#print(self.Contents)
+		#Check the contents of a component for Fields
+		for line_nr in range(len(self.Contents)):
+			for anyField in self.fieldList:
+				#print(anyField.name)
+				for Alias in anyField.Aliases:
+					#print(Alias)
+					if Alias in self.Contents[line_nr]:
+						print(Alias)
+						#print(self.Contents[line_nr])
+						self.PropertyList.append([anyField.name,self.Contents[line_nr]])
+						#print(self.PropertyList)
+					
 	def addNewInfo(self, FarnellLink, MouserLink, DigiKeyLink):
 		if FarnellLink != self.FarnellLink:
 			self.FarnellLink = FarnellLink
@@ -70,6 +88,14 @@ class Component(object):
 			self.setDigiKeyLink(DigiKeyLink)
 	#pass
 
+class KiCAD_Field(object):
+	def __init__(self):
+		self.Aliases = []
+		self.name = ""
+	def appendAlias(self,newAlias):
+		self.Aliases.append(newAlias)
+	#def 
+	#pass
 def getCleanLine(line_to_be_cleaned):
 	#function to create a clean string to generate new entries
 	positions = []
@@ -103,6 +129,7 @@ class SCH_FILE(object):
 		self.subcircuits = []
 		self.SchematicName = ""
 		self.path = ""
+		self.fieldList = ""
 	def setPath(self, path):
 		self.path = path
 	def getPath(self):
@@ -177,6 +204,7 @@ class SCH_FILE(object):
 						LastComponent = self.getLastComponent()
 						LastComponent.startpos(count)
 						LastComponent.SetSchematicName(self.getSchematicName())
+						LastComponent.fieldList = self.fieldList
 						#print(count)
 						#LastComponent.
 					if content[count][0] == "L":
@@ -247,6 +275,7 @@ class SCH_FILE(object):
 					LastComponent.SetFarnellLink = ""
 					#ListOfFarnellLinks.append("")
 					LastComponent.endpos(count)
+					LastComponent.Contents = content[LastComponent.startposition:LastComponent.endposition]
 				if test_var > 100000: # prevents fails
 					break
 		

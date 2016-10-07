@@ -8,7 +8,46 @@ from tkinter import messagebox
 mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
 openCSVFile = SCH_TO_CSV_OOP_LIB.CSV_FILE()
 initialDirectory = "" 
+FieldsConfigFile = "FieldKeywords.conf"
+Fieldlist = [];
 
+
+def ReadSettings():
+	
+	try:
+		f = open(FieldsConfigFile)
+		
+	except IOError:
+		print("Error: can\'t find file or read data")
+	configfile = f.readlines()
+	#print(configfile)
+	if "KiCAD PLE Config file v1.0" in configfile[0]:
+		
+		for line in range(1, len(configfile)-1):
+			initPos =1
+			newField = SCH_TO_CSV_OOP_LIB.KiCAD_Field()
+			if configfile[line][0] == "<" and configfile[line][-2] == ">":
+				endPos = configfile[line].find("|");
+				#print(configfile[line][initPos:endPos])
+				newField.name = configfile[line][initPos:endPos]
+				newField.appendAlias(newField.name)
+				initPos =endPos
+				endPos = configfile[line].find("|",initPos+1);
+				while not endPos == -1:
+				#	print(configfile[line][initPos+1:endPos])
+					newField.appendAlias(configfile[line][initPos+1:endPos])
+					initPos = endPos
+					endPos = configfile[line].find("|",initPos+1);
+					
+				#print(configfile[line][initPos+1:-2])
+				newField.appendAlias(configfile[line][initPos+1:-2])
+				
+			global Fieldlist
+			Fieldlist.append(newField)
+			
+		
+	else:
+		print("incorrect config file")
 
 def OpenFile():
     #print "click!"
@@ -42,6 +81,8 @@ def OpenFile():
 				print("Error: can\'t find file or read data")
 			else:
 				mainFile.SetContents(f.readlines())
+				mainFile.fieldList = Fieldlist;
+				#print(FieldList)
 
 				for i  in range(len(filename)): # get the last part of the file path
 
@@ -72,6 +113,7 @@ def OpenFile():
 				mainFile.deleteContents()
 
 			break
+		mainFile.getComponents()[i].generateProperties()
 	root.initialDirectory = setInitialDirectory(filename)
 	
 	
@@ -253,6 +295,8 @@ root.bind("<Escape>", lambda e: e.widget.quit())
 background_image = PhotoImage(file="KICAD_PLE.png")
 background = Label(root, image=background_image, bd=0)
 background.pack()
+ReadSettings()
+
 
 b = ttk.Button(root, text="Open File", command=OpenFile)
 b.pack()
