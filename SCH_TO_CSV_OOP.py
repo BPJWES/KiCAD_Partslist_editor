@@ -30,7 +30,7 @@ def ReadSettings():
 				#print(configfile[line][initPos:endPos])
 				newField.name = configfile[line][initPos:endPos]
 				newField.appendAlias(newField.name)
-				initPos =endPos
+				initPos = endPos
 				endPos = configfile[line].find("|",initPos+1);
 				while not endPos == -1:
 				#	print(configfile[line][initPos+1:endPos])
@@ -242,7 +242,7 @@ def loadCSV():
 			#openCSVFile.printContents()
 			#openCSVFile.printLine(1)
 
-			if openCSVFile.generateCSVComponents():
+			if openCSVFile.generateCSVComponentsNew():
 				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 			else:
 				messagebox.showinfo("Import Complete",str(openCSVFile.getNumberOfComponents()) + " components were imported.")
@@ -270,7 +270,7 @@ def BuildNewSCH():
 		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
+			if mainFile.ModifyNewSCHFileNew(0,openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 	else:
 		if mainFile.getComponents():
