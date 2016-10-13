@@ -270,7 +270,7 @@ def BuildNewSCH():
 		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFileNew(0,openCSVFile,savePath):
+			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 	else:
 		if mainFile.getComponents():

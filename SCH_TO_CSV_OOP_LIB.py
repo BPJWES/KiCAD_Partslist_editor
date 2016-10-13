@@ -2,13 +2,10 @@ class Component(object):
 	def __init__(self):
 		self.startposition = 0
 		self.endposition = 0
-		self.FarnellLink = ""
 		self.SchematicName = ""
 		self.name = ""
 		self.annotation = ""
 		self.value = ""
-		self.MouserLink = ""
-		self.DigiKeyLink = ""
 		# refactor the field extraction
 		self.PropertyList = []
 		self.Contents = ""
@@ -19,10 +16,6 @@ class Component(object):
 		self.startposition = x
 	def endpos(self,x):
 		self.endposition = x
-	def SetFarnellLink(self,x):
-		self.FarnellLink = x
-	def GetFarnellLink(self):
-		return self.FarnellLink
 	def SetName(self,x):
 		self.name = x
 	def GetName(self):
@@ -38,9 +31,6 @@ class Component(object):
 	def printprops(self):
 		print(self.name)
 		print(self.annotation)
-		print(self.FarnellLink)
-		print(self.MouserLink)
-		print(self.DigiKeyLink)
 		print(self.value)
 		print(self.SchematicName)
 	def printall(self):
@@ -48,7 +38,6 @@ class Component(object):
 		print(self.endposition)
 		print(self.name)
 		print(self.annotation)
-		print(self.FarnellLink)
 		print(self.value)
 		print(self.SchematicName)
 	def SetSchematicName(self, schematic_name):
@@ -59,14 +48,6 @@ class Component(object):
 		return self.startposition
 	def getEndLine(self):
 		return self.endposition
-	def setMouserLink(self,MouserLink):
-		self.MouserLink = MouserLink
-	def getMouserLink(self):
-		return self.MouserLink
-	def setDigiKeyLink(self,DigiKeyLink):
-		self.DigiKeyLink = DigiKeyLink
-	def getDigiKeyLink(self):
-		return self.DigiKeyLink
 	def generateProperties(self):
 		#parse the contents of a component for Fields
 		self.findLastFieldLine()
@@ -94,13 +75,6 @@ class Component(object):
 			if found == 0:
 				self.PropertyList.append([anyField.name,"","",0])#convert to tuple
 					
-	def addNewInfo(self, FarnellLink, MouserLink, DigiKeyLink):
-		if FarnellLink != self.FarnellLink:
-			self.FarnellLink = FarnellLink
-		if MouserLink != self.MouserLink:
-			self.setMouserLink(MouserLink)
-		if DigiKeyLink != self.DigiKeyLink:
-			self.setDigiKeyLink(DigiKeyLink)
 	def findLastFieldLine(self):
 		line_counter = 0
 		for line_nr in range(len(self.Contents)):
@@ -117,7 +91,7 @@ class Component(object):
 		self.lastFieldLineNr = self.lastFieldLineNr+1
 		propertyString = cleanLine[:2] + str(self.lastFieldLineNr)+ cleanLine[3:5]+ self.PropertyList[property_nr][1] + cleanLine[5:-2] + self.PropertyList[property_nr][0] +"\""+ "\n"
 		return propertyString
-	def addNewInfo2(self, CSV_propertylist):
+	def addNewInfo(self, CSV_propertylist):
 		for CSV_property in CSV_propertylist:	
 			for SCH_property in self.PropertyList:
 				if CSV_property[0].name == SCH_property[0]: #matching property names
@@ -140,10 +114,7 @@ class KiCAD_Field(object):
 		self.contents = ""
 	def appendAlias(self,newAlias):
 		self.Aliases.append(newAlias)
-#	def field_contents(self)
-#		self.contents
-	#def 
-	#pass
+
 def getCleanLine(line_to_be_cleaned):
 	#function to create a clean string to generate new entries
 	positions = []
@@ -206,10 +177,8 @@ class SCH_FILE(object):
 		self.components.append(component)
 		self.numb_of_comps = self.numb_of_comps + 1
 	def printprops(self):
-		#print(self.contents)
 		print(self.numb_of_comps)
 		print(self.components)
-		#print(self.components[0].GetAnnotation())
 		print(self.subcircuits_names)
 		print(self.number_of_subcircuits)
 		print(self.SchematicName)
@@ -252,9 +221,8 @@ class SCH_FILE(object):
 						LastComponent = self.getLastComponent()
 						LastComponent.startpos(count)
 						LastComponent.SetSchematicName(self.getSchematicName())
-						#print(["SchematicName: ", LastComponent.SchematicName])
 						LastComponent.fieldList = self.fieldList
-						#LastComponent.
+						
 					if content[count][0] == "L":
 							i = 0
 							for i in range(len(content[count])):
@@ -277,7 +245,7 @@ class SCH_FILE(object):
 									break
 						LastComponent.Value(content[count][startOfString:endOfString])			
 					
-					
+					'''
 					if "FarnellLink" in content[count] or "farnelllink" in content[count] or "Farnelllink" in content[count] or "farnellLink" in content[count] : 
 						testvar = 0
 						
@@ -316,9 +284,9 @@ class SCH_FILE(object):
 						LastComponent.setDigiKeyLink(content[count][startOfString:endOfString])
 					
 						#ListOfFarnellLinks.append(content[count][startOfString:endOfString])
+					'''
 					count = count + 1
 				if not "#" in content[test_var+1]:
-					LastComponent.SetFarnellLink = ""
 					#ListOfFarnellLinks.append("")
 					LastComponent.endpos(count)
 					LastComponent.Contents = content[LastComponent.startposition:LastComponent.endposition]
@@ -443,227 +411,13 @@ class SCH_FILE(object):
 		print(str(self.get_number_of_components()))
 		
 		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
-			for i in range (CSV_FILE.getNumberOfComponents()):
-				for p in range (self.get_number_of_components()):
-					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.SchematicName ==  CSV_FILE.getComponents()[i].getSchematic(): 
-						toAddFarnellLink = " "
-						toAddMouserLink = " "
-						toAddDigikeyLink = " "
-						if len(CSV_FILE.getComponents()[i].getFarnellLink()) > 1:
-
-							toAddFarnellLink = CSV_FILE.getComponents()[i].getFarnellLink()
-
-						if len(CSV_FILE.getComponents()[i].getMouserLink())>1:
-							toAddMouserLink = CSV_FILE.getComponents()[i].getMouserLink()
-
-						if len(CSV_FILE.getComponents()[i].getDigiKeyLink())>1:
-							toAddDigikeyLink = CSV_FILE.getComponents()[i].getDigiKeyLink()
-
-						self.getComponents()[p].addNewInfo(toAddFarnellLink,toAddMouserLink,toAddDigikeyLink)
-
-						q = 0
-
-						while self.contents[q+self.getComponents()[p].getStartLine()][0] != "F":
-
-							q = q + 1
-						while self.contents[q+self.getComponents()[p].getStartLine()][0] == "F":
-
-							q = q + 1
-
-						q= q -1
-						if "FarnellLink" in self.contents[q+self.getComponents()[p].getStartLine()]:
-							positions = []
-						
-							for r in range(len(self.contents[q+self.getComponents()[p].getStartLine()])):
-								
-								if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-									positions.append(r)
-							
-									
-							self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
-							
-							#place both DigiKeyLink and  MouserLink on same line:
-							FarnellLine = self.contents[q+self.getComponents()[p].getStartLine()]
-							bufferstring = getCleanLine(self.contents[q-1+self.getComponents()[p].getStartLine()])
-							self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
-							FarnellLine = self.contents[q+self.getComponents()[p].getStartLine()]
-							self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+3)+ bufferstring[3:5]+ self.getComponents()[p].getDigiKeyLink() + bufferstring[5:-1] + " \"DigiKeyLink\"" + "\n"
-							
-							#print("HOIHOIHOIHOI")
-						elif "MouserLink" in self.contents[q+self.getComponents()[p].getStartLine()]:	
-							#PLACE FarnellLink before, DigiKey After
-							if "FarnellLink" in self.contents[q-1 + self.getComponents()[p].getStartLine()]: #is FarnellLink in Previous Line
-								positions = []
-						
-								for r in range(len(self.contents[q-1 + self.getComponents()[p].getStartLine()])):
-								
-									if self.contents[q-1+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-																
-								self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
-							#Reparse MouserString
-							
-							positions = []
-						
-							for r in range(len(self.contents[q+self.getComponents()[p].getStartLine()])):
-								
-								if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-									positions.append(r)
-							
-									
-							self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getMouserLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
-							
-							# add DigiKeyLink onto MouserLink Line
-							if "FarnellLink" in self.contents[q-1 + self.getComponents()[p].getStartLine()]:
-								bufferstring = getCleanLine(self.contents[q-2+self.getComponents()[p].getStartLine()])
-							else:
-								bufferstring = getCleanLine(self.contents[q-1+self.getComponents()[p].getStartLine()])
-								# PUT FarnellLink in place:
-								q = q -1
-								bufferstring = self.contents[q+self.getComponents()[p].getStartLine()]
-								self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()] +  bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].GetFarnellLink() + bufferstring[5:-1] + " \"FarnellLink\"" + "\n"
-								q = q + 1
-								
-							MouserLine = self.contents[q+self.getComponents()[p].getStartLine()]
-							self.contents[q+self.getComponents()[p].getStartLine()] = MouserLine +  bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].getDigiKeyLink() + bufferstring[5:-1] + " \"DigiKeyLink\"" + "\n"
-						
-						
-						elif "DigiKeyLink" in self.contents[q+self.getComponents()[p].getStartLine()]:
-							orignalBufferLine = ""
-							if "FarnellLink" in self.contents[q-2 + self.getComponents()[p].getStartLine()]: #is FarnellLink in the line before previous Line
-								orignalBufferLine = getCleanLine(self.contents[q-3 + self.getComponents()[p].getStartLine()])
-								positions = []
-						
-								for r in range(len(self.contents[q-2 + self.getComponents()[p].getStartLine()])):
-									if self.contents[q-2+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-																
-								self.contents[q-2+self.getComponents()[p].getStartLine()] = self.contents[q-2+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-2+self.getComponents()[p].getStartLine()][positions[-3]:]
-								
-								if "MouserLink" in self.contents[q - 1 + self.getComponents()[p].getStartLine()]:
-									positions = []
-						
-									for r in range(len(self.contents[q-1 + self.getComponents()[p].getStartLine()])):
-										if self.contents[q-1+self.getComponents()[p].getStartLine()][r] == "\"":
-											positions.append(r)
-																
-									self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getMouserLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
-									#controleer
-								if "DigiKeyLink" in self.contents[q + self.getComponents()[p].getStartLine()]:
-									positions = []
-						
-									for r in range(len(self.contents[q + self.getComponents()[p].getStartLine()])):
-										if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-											positions.append(r)
-																
-									self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
-								
-								
-								
-							elif "FarnellLink" in self.contents[q-1 + self.getComponents()[p].getStartLine()]: #is FarnellLink in Previous Line
-								orignalBufferLine = getCleanLine(self.contents[q-2 + self.getComponents()[p].getStartLine()])
-								positions = []
-						
-								for r in range(len(self.contents[q-1 + self.getComponents()[p].getStartLine()])):
-									if self.contents[q-1+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-																
-								self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
-								#add MouserLink to Previous line
-								FarnellLine = self.contents[q-1+self.getComponents()[p].getStartLine()]
-								
-								self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  orignalBufferLine[:2] + str(int(orignalBufferLine[2])+2)+ orignalBufferLine[3:5]+ self.getComponents()[p].getMouserLink() + orignalBufferLine[5:-1] + " \"MouserLink\"" + "\n"
-								
-								#Missing DigiKeyLink Operation
-								positions = []
-						
-								for r in range(len(self.contents[q + self.getComponents()[p].getStartLine()])):
-									if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-										
-								#print(self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1])
-								
-								self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()][:positions[-4]+1]+self.getComponents()[p].GetFarnellLink() + self.contents[q-1+self.getComponents()[p].getStartLine()][positions[-3]:]
-							elif "MouserLink" in self.contents[q-1 + self.getComponents()[p].getStartLine()]:
-								#mouserlink in previous line
-								bufferstring = getCleanLine(self.contents[q - 2 + self.getComponents()[p].getStartLine()])
-								self.contents[q-1 + self.getComponents()[p].getStartLine()] = self.contents[q-1 + self.getComponents()[p].getStartLine()] + bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].GetFarnellLink() + bufferstring[5:-1] + " \"FarnellLink\"" + "\n"
-								
-								positions = []
-						
-								for r in range(len(self.contents[q - 1 + self.getComponents()[p].getStartLine()])):
-									if self.contents[q-1+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-								self.contents[q -1 +self.getComponents()[p].getStartLine()] = self.contents[q -1 +self.getComponents()[p].getStartLine()][:2] + str(int(bufferstring[2])+2) + self.contents[q -1 +self.getComponents()[p].getStartLine()][3:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q - 1 +self.getComponents()[p].getStartLine()][positions[-3]:]
-								#print(self.contents[q -1 +self.getComponents()[p].getStartLine()])
-								positions = []
-						
-								for r in range(len(self.contents[q + self.getComponents()[p].getStartLine()])):
-									if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-								self.contents[q +self.getComponents()[p].getStartLine()] = self.contents[q +self.getComponents()[p].getStartLine()][:2] + str(int(bufferstring[2])+3) + self.contents[q +self.getComponents()[p].getStartLine()][3:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q +self.getComponents()[p].getStartLine()][positions[-3]:]
-								
-							else:
-								#No Links other than DigiKeyLink found
-								positions = []
-						
-								for r in range(len(self.contents[q + self.getComponents()[p].getStartLine()])):
-									if self.contents[q+self.getComponents()[p].getStartLine()][r] == "\"":
-										positions.append(r)
-								
-								#print(positions)
-								#print(self.contents[q+self.getComponents()[p].getStartLine()])
-								bufferstring = getCleanLine(self.contents[q - 1 +self.getComponents()[p].getStartLine()]) #could be wrong if value exist in last line
-								self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q +self.getComponents()[p].getStartLine()][:2] + str(int(bufferstring[2])+3) + self.contents[q+self.getComponents()[p].getStartLine()][3:positions[-4]+1]+self.getComponents()[p].getDigiKeyLink() + self.contents[q+self.getComponents()[p].getStartLine()][positions[-3]:]
-								
-								
-								#bufferstring = getCleanLine(self.contents[q - 1 +self.getComponents()[p].getStartLine()]) #could be wrong if value exist in last line
-								self.contents[q-1+self.getComponents()[p].getStartLine()] = self.contents[q-1+self.getComponents()[p].getStartLine()] +  bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].GetFarnellLink() + bufferstring[5:-1] + " \"FarnellLink\"" + "\n"
-								FarnellLine = self.contents[q -1 +self.getComponents()[p].getStartLine()]
-								self.contents[q -1 +self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
-						else:
-						#No links have been found
-							bufferstring = getCleanLine(self.contents[q+self.getComponents()[p].getStartLine()])
-														
-							self.contents[q+self.getComponents()[p].getStartLine()] = self.contents[q+self.getComponents()[p].getStartLine()] +  bufferstring[:2] + str(int(bufferstring[2])+1)+ bufferstring[3:5]+ self.getComponents()[p].GetFarnellLink() + bufferstring[5:-1] + " \"FarnellLink\"" + "\n"
-							FarnellLine = self.contents[q+self.getComponents()[p].getStartLine()]
-							self.contents[q+self.getComponents()[p].getStartLine()] = FarnellLine +  bufferstring[:2] + str(int(bufferstring[2])+2)+ bufferstring[3:5]+ self.getComponents()[p].getMouserLink() + bufferstring[5:-1] + " \"MouserLink\"" + "\n"
-							MouserLine = self.contents[q+self.getComponents()[p].getStartLine()]
-							self.contents[q+self.getComponents()[p].getStartLine()] = MouserLine +  bufferstring[:2] + str(int(bufferstring[2])+3)+ bufferstring[3:5]+ self.getComponents()[p].getDigiKeyLink() + bufferstring[5:-1] + " \"DigiKeyLink\"" + "\n"
-				
-			try:
-				f = open(savepath, 'w')
-			except IOError:
-				return "error"
-			else:			
-				for i in range (len(self.contents)):
-					f.write(self.contents[i])
-				f.close
-				
-			for i in range(len(self.subcircuits)):
-				for p in range (len(savepath)):
-					if savepath[-p] == "/":
-						break #find first forwardslash to add other file name
-				
-				new_savepath = savepath[:-p+1]+self.subcircuits_names[i]
-				print("new_savepath")
-				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
-				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
-		else: 
-			print("No components loaded")
-	def ModifyNewSCHFileNew(self, oldSCHFile, CSV_FILE, savepath):
-		#this will break if the order is not FarnellLink; MouserLink; DigiKeyLink
-		print(str(CSV_FILE.getNumberOfComponents()))
-		print(str(self.get_number_of_components()))
-		
-		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
 			
 			for i in range (CSV_FILE.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
 					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.SchematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
 					
 						selected_component = self.getComponents()[p]
-						selected_component.addNewInfo2(CSV_FILE.getComponents()[i].PropertyList)
+						selected_component.addNewInfo(CSV_FILE.getComponents()[i].PropertyList)
 						
 						for property in range(len(selected_component.PropertyList)):
 							
@@ -718,21 +472,20 @@ class CSV_FILE(object):
 			self.number_of_components = 0
 			self.startposition = 0
 			self.endposition = 0
-			self.FarnellLink = ""
 			self.SchematicName = ""
 			self.name = ""
 			self.annotation = ""
 			self.value = ""
 			self.fieldList = []
 	def setContents(self, to_be_inserted):
-				self.contents = to_be_inserted
+		self.contents = to_be_inserted
 	def printContents(self):
-				print(self.contents)
+		print(self.contents)
 	def printLine(self, line):
-			print(self.contents[line])
+		print(self.contents[line])
 	def printComponents(self):
-			for i in range (self.number_of_components):
-				print(self.components[i].getFarnellLink())
+		for i in range (self.number_of_components):
+			print(self.components[i].getFarnellLink())
 	def getNumberOfComponents(self):
 			return self.number_of_components
 	def getComponents(self):
@@ -840,9 +593,6 @@ class CSV_COMPONENT(object):
 	def __init__(self):
 		self.annotation = ""
 		self.value = ""
-		self.FarnellLink = ""
-		self.MouserLink = ""
-		self.DigiKeyLink = ""
 		self.name = ""
 		self.schematic = ""
 		self.startLine = ""
@@ -854,9 +604,6 @@ class CSV_COMPONENT(object):
 		self.fieldOrder = [];
 	def printprops(self):
 		print(self.annotation)
-		print(self.FarnellLink)
-		#print(self.MouserLink)
-		#print(self.DigiKeyLink)
 	def setName(self,name):
 		self.name = name
 	def getName(self):
@@ -869,18 +616,6 @@ class CSV_COMPONENT(object):
 		self.value = value
 	def getValue(self):
 		return self.value
-	def setFarnellLink(self, FarnellLink):
-		self.FarnellLink = FarnellLink
-	def getFarnellLink(self):
-		return self.FarnellLink
-	def setMouserLink(self, MouserLink):
-		self.MouserLink = MouserLink
-	def getMouserLink(self):
-		return self.MouserLink
-	def setDigiKeyLink(self, DigiKeyLink):
-		self.DigiKeyLink = DigiKeyLink
-	def getDigiKeyLink(self):
-		return self.DigiKeyLink
 	def setSchematic(self, schematic):
 		self.schematic = schematic
 	def getSchematic(self):
@@ -912,6 +647,5 @@ class CSV_COMPONENT(object):
 						Data = self.Contents[line_nr][startOfString:endOfString]
 						
 						self.PropertyList.append([anyField.name,Data])#convert to tuple
-		print(self.PropertyList)
 	def appendToPropertyList(self,data):
 		self.PropertyList.append(data)#convert to tuple
