@@ -27,18 +27,17 @@ def ReadSettings():
 			newField = SCH_TO_CSV_OOP_LIB.KiCAD_Field()
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
-				#print(configfile[line][initPos:endPos])
+				
 				newField.name = configfile[line][initPos:endPos]
 				newField.appendAlias(newField.name)
 				initPos = endPos
 				endPos = configfile[line].find("|",initPos+1);
 				while not endPos == -1:
-				#	print(configfile[line][initPos+1:endPos])
+				
 					newField.appendAlias(configfile[line][initPos+1:endPos])
 					initPos = endPos
 					endPos = configfile[line].find("|",initPos+1);
 					
-				#print(configfile[line][initPos+1:-2])
 				newField.appendAlias(configfile[line][initPos+1:-2])
 				
 			global Fieldlist
@@ -49,7 +48,7 @@ def ReadSettings():
 		print("incorrect config file")
 
 def OpenFile():
-    #print "click!"
+    
 	initialDirectory = root.initialDirectory
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
@@ -153,7 +152,8 @@ def listParts():
 
 				d = Entry(sub, text="")
 				d.grid(row=i, column=3)
-				d.insert(0,mainFile.getComponents()[i].GetFarnellLink())
+				#d.insert(0,mainFile.getComponents()[i].GetFarnellLink())
+				d.insert(0,"deprecated")
 
 def checklower(lowest_known, to_compare):
 	#returns 1 if lower

@@ -432,9 +432,7 @@ class CSV_FILE(object):
 				positionLast = 0	
 				for p in range(len(self.contents[i])):
 					if self.contents[i][p] == delimiter:
-							
 							if counter == 0:
-								#self.components[i-1] == new_csv_component
 								self.components[i-1].setAnnotation(self.contents[i][positionLast:p])
 							field_content = self.contents[i][positionLast:p]
 							new_csv_component.appendToPropertyList([self.fieldList[counter],field_content])
