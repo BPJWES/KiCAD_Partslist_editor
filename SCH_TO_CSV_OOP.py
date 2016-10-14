@@ -112,7 +112,7 @@ def OpenFile():
 				mainFile.deleteContents()
 
 			break
-		mainFile.getComponents()[i].generateProperties()
+		#mainFile.getComponents()[i].generateProperties()
 	root.initialDirectory = setInitialDirectory(filename)
 	
 	
@@ -128,7 +128,7 @@ def GenerateCSV():
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
 		root.initialDirectory = initialDirectory = setInitialDirectory(root.path_to_save)
 		sortParts()
-		if mainFile.SaveBOMInCSVNew(root.path_to_save):
+		if mainFile.SaveBOMInCSV(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
 	else:
 		messagebox.showerror("Cannot generate .CSV", "No SCH File loaded")

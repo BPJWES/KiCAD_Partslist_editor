@@ -52,7 +52,6 @@ class Component(object):
 		#parse the contents of a component for Fields
 		self.findLastFieldLine()
 		for anyField in self.fieldList:
-			print(anyField.name)
 			found = 0
 			for Alias in anyField.Aliases:
 				for line_nr in range(len(self.Contents)):
@@ -245,57 +244,20 @@ class SCH_FILE(object):
 									break
 						LastComponent.Value(content[count][startOfString:endOfString])			
 					
-					'''
-					if "FarnellLink" in content[count] or "farnelllink" in content[count] or "Farnelllink" in content[count] or "farnellLink" in content[count] : 
-						testvar = 0
-						
-						for i in range(len(content[count])):
-							if content[count][i] == "\"":
-								if testvar == 0:
-									startOfString = i+1
-									testvar = 1
-								else:
-									endOfString = i
-									break
-						LastComponent.SetFarnellLink(content[count][startOfString:endOfString])
-					if "MouserLink" in content[count] : 
-						testvar = 0
-						
-						for i in range(len(content[count])):
-							if content[count][i] == "\"":
-								if testvar == 0:
-									startOfString = i+1
-									testvar = 1
-								else:
-									endOfString = i
-									break
-						LastComponent.setMouserLink(content[count][startOfString:endOfString])
-					if "DigiKeyLink" in content[count] : 
-						testvar = 0
-						
-						for i in range(len(content[count])):
-							if content[count][i] == "\"":
-								if testvar == 0:
-									startOfString = i+1
-									testvar = 1
-								else:
-									endOfString = i
-									break
-						LastComponent.setDigiKeyLink(content[count][startOfString:endOfString])
-					
-						#ListOfFarnellLinks.append(content[count][startOfString:endOfString])
-					'''
 					count = count + 1
 				if not "#" in content[test_var+1]:
 					#ListOfFarnellLinks.append("")
+					
 					LastComponent.endpos(count)
 					LastComponent.Contents = content[LastComponent.startposition:LastComponent.endposition]
+					LastComponent.generateProperties()
+			#		print("parsed")
 				if test_var > 100000: # prevents fails
 					break
 		
 		for subcircuitcounter in range(len(self.subcircuits_names)):
 			
-			
+			#print("subcircuit")
 			for p in range (len(self.path)):
 				if self.path[-p] == "/":
 					break
@@ -310,6 +272,7 @@ class SCH_FILE(object):
 				self.get_subcircuit(subcircuitcounter).SetContents(f.readlines())
 				f.close()
 				self.get_subcircuit(subcircuitcounter).setSchematicName(self.subcircuits_names[subcircuitcounter])
+				self.get_subcircuit(subcircuitcounter).fieldList = self.fieldList
 				self.get_subcircuit(subcircuitcounter).ParseComponents()			
 				self.AppendComponents(self.get_subcircuit(subcircuitcounter).getComponents())
 	def get_subcircuit(self, x):
@@ -319,7 +282,7 @@ class SCH_FILE(object):
 		for item in range(len(componentList)):
 			self.components.append(componentList[item])
 			self.numb_of_comps = self.get_number_of_components() + 1
-	def SaveBOMInCSVNew(self,savepath):
+	def SaveBOMInCSV(self,savepath):
 	#New variant which allows for user configurable field names
 		if not '.csv' in savepath:
 			savepath = savepath + '.csv'
@@ -347,8 +310,6 @@ class SCH_FILE(object):
 				for field in self.fieldList:
 				#match fields to component.field
 					for counter in range(len(self.getComponents()[item].PropertyList)):
-						print(self.getComponents()[item].PropertyList[counter][0])
-						print(field.name)
 						if self.getComponents()[item].PropertyList[counter][0] == field.name:
 							f.write(self.getComponents()[item].PropertyList[counter][1])
 							f.write(",")
@@ -357,48 +318,6 @@ class SCH_FILE(object):
 						f.write("")
 						f.write(",")
 				f.write(self.getComponents()[item].GetSchematicName())
-				f.write("\n")
-			f.close
-	def SaveBOMInCSV(self,savepath):
-		if not '.csv' in savepath:
-			savepath = savepath + '.csv'
-		try:
-			f = open(savepath, 'w')
-		except IOError:
-			if savepath:	
-				return "error"
-		else:
-			f.write("Part\#")
-			f.write(",")
-			f.write("PartType")
-			f.write(",")
-			f.write("FarnellLink")
-			f.write(",")
-			f.write("MouserLink")
-			f.write(",")
-			f.write("DigiKeyLink")
-			f.write(",")
-			f.write("Found in: ")
-			f.write("\n")
-			for item in range(self.get_number_of_components()):#er stond -1
-				#print(str(item))
-				f.write(self.getComponents()[item].GetAnnotation())
-				f.write(",")
-				f.write(self.getComponents()[item].GetName())
-				f.write(",")
-				f.write(self.getComponents()[item].GetFarnellLink())
-				f.write(",")
-				f.write(self.getComponents()[item].getMouserLink())
-				f.write(",")
-				f.write(self.getComponents()[item].getDigiKeyLink())
-				f.write(",")
-				f.write(self.getComponents()[item].GetSchematicName())
-				f.write(",")#make conditional
-				f.write(str(self.getComponents()[item].getStartLine()))#make conditional
-				f.write(",")#make conditional
-				f.write(str(self.getComponents()[item].getEndLine()))#make conditional
-				f.write(",")
-				f.write(str(self.getComponents()[item].GetValue()))
 				f.write("\n")
 			f.close
 	def getSubCircuitName(self):
