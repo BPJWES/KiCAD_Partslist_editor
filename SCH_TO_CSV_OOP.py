@@ -220,7 +220,6 @@ def loadCSV():
 	
 	#root.initialDirectory = setInitialDirectory(filename) this breaks changes mainFile.schematicname
 	
-	
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
 		try:
 			f = open(filename)
@@ -242,7 +241,7 @@ def loadCSV():
 			#openCSVFile.printContents()
 			#openCSVFile.printLine(1)
 
-			if openCSVFile.generateCSVComponentsNew():
+			if openCSVFile.generateCSVComponents():
 				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 			else:
 				messagebox.showinfo("Import Complete",str(openCSVFile.getNumberOfComponents()) + " components were imported.")

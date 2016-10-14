@@ -72,8 +72,7 @@ class Component(object):
 						found = 1
 						#break
 			if found == 0:
-				self.PropertyList.append([anyField.name,"","",0])#convert to tuple
-					
+				self.PropertyList.append([anyField.name,"","",0])#convert to tuple					
 	def findLastFieldLine(self):
 		line_counter = 0
 		for line_nr in range(len(self.Contents)):
@@ -276,8 +275,7 @@ class SCH_FILE(object):
 				self.get_subcircuit(subcircuitcounter).ParseComponents()			
 				self.AppendComponents(self.get_subcircuit(subcircuitcounter).getComponents())
 	def get_subcircuit(self, x):
-		return self.subcircuits[x]
-	
+		return self.subcircuits[x]	
 	def AppendComponents(self, componentList):
 		for item in range(len(componentList)):
 			self.components.append(componentList[item])
@@ -366,8 +364,7 @@ class SCH_FILE(object):
 				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
 				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 		else: 
-			print("No components loaded")		
-		
+			print("No components loaded")				
 	def deleteContents(self):
 		for p in range (len(self.subcircuits)):
 			# first delete subcircuits
@@ -410,53 +407,6 @@ class CSV_FILE(object):
 	def getComponents(self):
 			return self.components
 	def generateCSVComponents(self):
-			if "," in self.contents[1]:
-				delimiter = ","
-			elif ";":
-				delimiter = ","
-			else:
-				return 'error'
-			
-			for i in range(1, len(self.contents)):
-				new_csv_component = CSV_COMPONENT()
-				new_csv_component.Contents = self.contents[i] 
-				self.components.append(new_csv_component)
-				self.number_of_components = self.number_of_components + 1
-				counter = 0
-				for p in range(len(self.contents[i])):
-					if self.contents[i][p] == delimiter:
-						#print("hoi")
-						position = p
-						if counter == 0:
-							self.components[i-1].setAnnotation(self.contents[i][0:p])
-							counter = counter + 1
-						elif counter == 1:
-							self.components[i-1].setName(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 2:
-							self.components[i-1].setFarnellLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 3:
-							self.components[i-1].setMouserLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 4:
-							self.components[i-1].setDigiKeyLink(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 5:
-							self.components[i-1].setSchematic(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 6:
-							self.components[i-1].setStartLine(self.contents[i][positionLast:position])
-							counter = counter + 1
-						elif counter == 7:
-							self.components[i-1].setEndLine(self.contents[i][positionLast:position])
-							counter = counter + 1
-						
-							#print(self.contents[i][positionLast:position])
-						#	print("test")
-						#print(counter)
-						positionLast = p + 1
-	def generateCSVComponentsNew(self):
 			if "," in self.contents[1]:
 				delimiter = ","
 			elif ";":
