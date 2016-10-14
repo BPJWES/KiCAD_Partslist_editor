@@ -1,4 +1,6 @@
 language: python
+install:
+	- "pip install python-tk"
 python:
       - "3.2"
       - "3.3"
