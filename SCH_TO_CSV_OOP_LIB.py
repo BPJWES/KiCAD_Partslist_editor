@@ -87,7 +87,7 @@ class Component(object):
 	def generatePropertyLine(self, property_nr):
 		cleanLine = getCleanLine(self.Contents[self.lastContentLine])
 		self.lastFieldLineNr = self.lastFieldLineNr+1
-		propertyString = cleanLine[:2] + str(self.lastFieldLineNr)+ cleanLine[3:5]+ self.PropertyList[property_nr][1] + cleanLine[5:-2] + self.PropertyList[property_nr][0] +"\""+ "\n"
+		propertyString = cleanLine[:2] + str(self.lastFieldLineNr)+ cleanLine[3:5]+ self.PropertyList[property_nr][1] + cleanLine[5:-1] + " \"" + self.PropertyList[property_nr][0] +"\""+ "\n"
 		return propertyString
 	def addNewInfo(self, CSV_propertylist):
 		for CSV_property in CSV_propertylist:	
@@ -124,8 +124,12 @@ def getCleanLine(line_to_be_cleaned):
 		#this line has been contaminated
 		line_to_be_returned = line_to_be_cleaned[:positions[0]+1] + line_to_be_cleaned[positions[1]:positions[2]+1] + line_to_be_cleaned[positions[3]:]
 	else :
-		#this line was clean
-		line_to_be_returned = line_to_be_cleaned
+		#this line was clean or there was a tilde sign in there
+		if "\"~\"" in line_to_be_cleaned:
+			#tilde is found in in kicad schematics with rescued symbols
+			line_to_be_returned = line_to_be_cleaned[:positions[0]+1] + line_to_be_cleaned[positions[1]:]
+		else:	
+			line_to_be_returned = line_to_be_cleaned
 	if "0000" in line_to_be_returned:
 		i = 0
 		for i in range (len(line_to_be_returned)-4):
@@ -134,6 +138,7 @@ def getCleanLine(line_to_be_cleaned):
 				break
 		
 		line_to_be_returned = line_to_be_returned[:i] + "0001" + line_to_be_returned[i+4 - len(line_to_be_returned):]
+	#print(line_to_be_returned)
 	return line_to_be_returned
 
 class SCH_FILE(object):
@@ -323,7 +328,9 @@ class SCH_FILE(object):
 	def getSubCircuits(self):
 		return self.subcircuits
 	def ModifyNewSCHFile(self, oldSCHFile, CSV_FILE, savepath):
-		#this will break if the order is not FarnellLink; MouserLink; DigiKeyLink
+		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
+		# should be fixed now but am not sure
+		
 		print(str(CSV_FILE.getNumberOfComponents()))
 		print(str(self.get_number_of_components()))
 		
@@ -357,7 +364,7 @@ class SCH_FILE(object):
 			for i in range(len(self.subcircuits)):
 				for p in range (len(savepath)):
 					if savepath[-p] == "/":
-						break #find first forwardslash to add other file name
+						break #find first forward slash to add other file name
 				
 				new_savepath = savepath[:-p+1]+self.subcircuits_names[i]
 				print("new_savepath")
