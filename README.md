@@ -14,8 +14,8 @@ KiCad Partslist Editor (PLE) allows you to export/import customizable fields fro
 
 Running KiCad Partslist-editor using windows, requires Python 3 and the TKinter.
 
-On linux you have to install python3 and python3-tk with 
-```sudo apt-get install python3 python3-tk```
+On linux you have to install python3 and python3-tk with  
+```sudo apt-get install python3 python3-tk```  
 Then you can run the part list editor with 
 python3 SCH_TO_CSV_OOP.py
 or just use the minimal shell script "kicad-partlist-editor-linux.sh" on linux. 
@@ -48,11 +48,11 @@ All lines starting with "<" define a field KiCAD PLE will look for in .SCH files
 
 The syntax of such a line is as follows:
 
-```<Fieldname|Field_alias1|Field_alias2|Field_alias3>```
+``` <Fieldname|Field_alias1|Field_alias2|Field_alias3> ```
 
 The Fieldname is the primary alias, so it can be considered Field_alias0 as well.
 
 The amount of aliases which can be added is theoretically unlimited, but the minimum is 1 (i.e. the field name)
 
-```<MyFieldName>``` isn't supported, one has to declare it with an alias:  
-```<MyFieldName|MyFieldName>```
+``` <MyFieldName> ``` isn't supported, one has to declare it with an alias:  
+``` <MyFieldName|MyFieldName> ```
