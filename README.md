@@ -5,12 +5,12 @@ KiCad Partslist Editor (PLE) allows you to export/import customizable fields fro
 * Load the root sheet of your project
 * export the CSV file
 * edit this CSV in your favourite spreadsheet editor (e.g. LibreOffice Calc)
-* backimport this CSV into PLE and save your changes then to your schematic file. 
+* backimport this CSV into KiCad PLE and save your changes then to your schematic file. 
 
 ![Screenshot](screenshot.png)
 
 
-## Installing KiCad Partslist-editor:
+## Installation
 
 Running KiCad Partslist-editor using windows, requires Python 3 and the TKinter.
 
@@ -22,7 +22,7 @@ or just use the minimal shell script "kicad-partlist-editor-linux.sh" on linux.
 
 
 
-## Using KiCad Partslist-editor:
+## Usage
 
 The 'Load Schematic' button, allows one to open the kicad .sch files, which subsequently parses the selected schematic file and all its hierarchical daughter modules.
 
@@ -37,14 +37,14 @@ The 'Import CSV' button lets you select the csv file containing the the partslis
 The 'Save Schematic' button updates the schematic files with the updated information as loaded through the 'Import CSV' operation.
 
 
-## Advanced use:
-To change the fields that the KiCAD PLE imports, exports and edits, edit the FieldKeywords.conf file
+## Advanced Usage
+To change the fields that the KiCad PLE imports, exports and edits, edit the FieldKeywords.conf file
 
 The syntax of the **FieldKeywords.conf** file is:
 First line is version string, this should not be changed
 Lastline is end-of-file indicator
 
-All lines starting with "<" define a field KiCAD PLE will look for in .SCH files
+All lines starting with "<" define a field KiCad PLE will look for in .SCH files
 
 The syntax of such a line is as follows:
 
