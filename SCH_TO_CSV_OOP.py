@@ -318,10 +318,10 @@ background.grid(row = 0, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady
 ReadSettings()
 
 
-b = ttk.Button(root, text="Load schematic", command=OpenFile)
+b = ttk.Button(root, text="Load Schematic", command=OpenFile)
 b.grid(row = 1, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5, )
 
-g = ttk.Button(root, text="Save schematic", command=BuildNewSCH)
+g = ttk.Button(root, text="Save Schematic", command=BuildNewSCH)
 g.grid(row = 2, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 
