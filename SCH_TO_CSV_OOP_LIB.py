@@ -1,3 +1,5 @@
+import os
+
 class Component(object):
 	def __init__(self):
 		self.startposition = 0
@@ -260,12 +262,8 @@ class SCH_FILE(object):
 					break
 		
 		for subcircuitcounter in range(len(self.subcircuits_names)):
-			
-			#print("subcircuit")
-			for p in range (len(self.path)):
-				if self.path[-p] == "/":
-					break
-			to_open = self.path[:-p+1] + self.subcircuits_names[subcircuitcounter]
+			to_open = os.path.join(os.path.dirname(self.path), self.subcircuits_names[subcircuitcounter])
+
 			try:
 				f = open(to_open)
 			except IOError:
@@ -331,8 +329,8 @@ class SCH_FILE(object):
 		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		# should be fixed now but am not sure
 		
-		print(str(CSV_FILE.getNumberOfComponents()))
-		print(str(self.get_number_of_components()))
+		print("Number of Parts in CSV: " + str(CSV_FILE.getNumberOfComponents()))
+		print("Number of Parts in this SCH: " + str(self.get_number_of_components()))
 		
 		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
 			
@@ -362,12 +360,8 @@ class SCH_FILE(object):
 				f.close
 				
 			for i in range(len(self.subcircuits)):
-				for p in range (len(savepath)):
-					if savepath[-p] == "/":
-						break #find first forward slash to add other file name
-				
-				new_savepath = savepath[:-p+1]+self.subcircuits_names[i]
-				print("new_savepath")
+				new_savepath = os.path.join(os.path.dirname(savepath), self.subcircuits_names[i])
+				print(new_savepath)
 				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
 				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 		else: 
