@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b51f18c6-94fc-4bc0-914d-9274e0d1bc49" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FieldKeywords.conf" afterPath="$PROJECT_DIR$/FieldKeywords.conf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SCH_TO_CSV_OOP.py" afterPath="$PROJECT_DIR$/SCH_TO_CSV_OOP.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py" afterPath="$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py" />
     </list>
     <ignored path="KiCAD_Partslist_editor.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,8 +27,8 @@
       <file leaf-file-name="SCH_TO_CSV_OOP.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="48" column="9" selection-start-line="48" selection-start-column="9" selection-end-line="48" selection-end-column="9" />
+            <state relative-caret-position="405">
+              <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -40,21 +36,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SCH_TO_CSV_OOP_LIB.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="214">
-              <caret line="270" column="61" selection-start-line="270" selection-start-column="35" selection-end-line="270" selection-end-column="61" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="configparser.py" pinned="false" current-in-tab="false">
         <entry file="file:///usr/lib/python3.4/configparser.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="176">
-              <caret line="737" column="8" selection-start-line="737" selection-start-column="8" selection-end-line="737" selection-end-column="8" />
+            <state relative-caret-position="-118">
+              <caret line="1168" column="8" selection-start-line="1168" selection-start-column="8" selection-end-line="1168" selection-end-column="8" />
               <folding />
             </state>
           </provider>
@@ -332,38 +318,31 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/SCH_TO_CSV_OOP.py</url>
-          <line>64</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
       <option name="time" value="2" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/lib/python3.4/configparser.py">
+    <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="737" column="8" selection-start-line="737" selection-start-column="8" selection-end-line="737" selection-end-column="8" />
+        <state relative-caret-position="214">
+          <caret line="270" column="62" selection-start-line="270" selection-start-column="62" selection-end-line="270" selection-end-column="62" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
+    <entry file="file:///usr/lib/python3.4/configparser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="270" column="61" selection-start-line="270" selection-start-column="35" selection-end-line="270" selection-end-column="61" />
+        <state relative-caret-position="-118">
+          <caret line="1168" column="8" selection-start-line="1168" selection-start-column="8" selection-end-line="1168" selection-end-column="8" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="48" column="9" selection-start-line="48" selection-start-column="9" selection-end-line="48" selection-end-column="9" />
+        <state relative-caret-position="405">
+          <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>

@@ -63,7 +63,8 @@ def OpenFile():
 
 
 	config.read('config.ini')
-	config.add_section('main')
+	if config.has_section('main') == FALSE:
+		config.add_section('main')
 	config.set('main', 'lastDirectory', os.path.dirname(filename))
 
 	with open('config.ini', 'w') as f:
