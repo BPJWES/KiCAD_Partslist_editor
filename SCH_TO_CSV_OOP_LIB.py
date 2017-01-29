@@ -1,3 +1,5 @@
+import os
+
 class Component(object):
 	def __init__(self):
 		self.startposition = 0
@@ -265,7 +267,9 @@ class SCH_FILE(object):
 			for p in range (len(self.path)):
 				if self.path[-p] == "/":
 					break
-			to_open = self.path[:-p+1] + self.subcircuits_names[subcircuitcounter]
+			
+			to_open = os.path.join(os.path.dirname(self.path), self.subcircuits_names[subcircuitcounter])
+
 			try:
 				f = open(to_open)
 			except IOError:

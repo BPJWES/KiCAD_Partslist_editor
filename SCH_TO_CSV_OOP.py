@@ -3,6 +3,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
+from configparser import ConfigParser
+import os
 
 
 mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
@@ -48,8 +50,10 @@ def ReadSettings():
 		print("incorrect config file")
 
 def OpenFile():
+	config = ConfigParser()
+	config.read('config.ini')
     
-	initialDirectory = root.initialDirectory
+	initialDirectory = config.get('main', 'lastDirectory', fallback="")
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	else:
@@ -57,6 +61,13 @@ def OpenFile():
 	filename = root.filename
 	root.SCHFILELAST = filename
 
+
+	config.read('config.ini')
+	config.add_section('main')
+	config.set('main', 'lastDirectory', os.path.dirname(filename))
+
+	with open('config.ini', 'w') as f:
+		config.write(f)
 
 	
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
