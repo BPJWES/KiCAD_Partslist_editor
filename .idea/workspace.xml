@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b51f18c6-94fc-4bc0-914d-9274e0d1bc49" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SCH_TO_CSV_OOP.py" afterPath="$PROJECT_DIR$/SCH_TO_CSV_OOP.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py" afterPath="$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py" />
     </list>
     <ignored path="KiCAD_Partslist_editor.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -24,14 +24,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="SCH_TO_CSV_OOP.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="SCH_TO_CSV_OOP.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
+            <state relative-caret-position="3360">
+              <caret line="263" column="31" selection-start-line="263" selection-start-column="28" selection-end-line="263" selection-end-column="31" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SCH_TO_CSV_OOP_LIB.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="163">
+              <caret line="372" column="97" selection-start-line="372" selection-start-column="97" selection-end-line="372" selection-end-column="97" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -55,6 +65,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/SCH_TO_CSV_OOP.py" />
+        <option value="$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py" />
       </list>
     </option>
   </component>
@@ -323,14 +334,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="270" column="62" selection-start-line="270" selection-start-column="62" selection-end-line="270" selection-end-column="62" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python3.4/configparser.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-118">
@@ -341,11 +344,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="66" column="34" selection-start-line="66" selection-start-column="34" selection-end-line="66" selection-end-column="34" />
+        <state relative-caret-position="3360">
+          <caret line="263" column="31" selection-start-line="263" selection-start-column="28" selection-end-line="263" selection-end-column="31" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SCH_TO_CSV_OOP_LIB.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="163">
+          <caret line="372" column="97" selection-start-line="372" selection-start-column="97" selection-end-line="372" selection-end-column="97" />
+          <folding />
         </state>
       </provider>
     </entry>

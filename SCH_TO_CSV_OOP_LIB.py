@@ -370,8 +370,8 @@ class SCH_FILE(object):
 					if savepath[-p] == "/":
 						break #find first forward slash to add other file name
 				
-				new_savepath = savepath[:-p+1]+self.subcircuits_names[i]
-				print("new_savepath")
+				new_savepath = os.path.join(os.path.dirname(savepath), self.subcircuits_names[i])
+				print(new_savepath)
 				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
 				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 		else: 
