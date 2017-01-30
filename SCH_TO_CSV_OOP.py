@@ -126,7 +126,7 @@ def OpenFile():
 	root.initialDirectory = setInitialDirectory(filename)
 
 	if mainFile.getSchematicName():
-		statusLabel['text'] = "Loaded schematic: " + mainFile.getSchematicName()
+		statusLabel['text'] = "Loaded schematic: " + mainFile.getSchematicName() + "\n" + str(mainFile.numb_of_comps) + " components were found"
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 
@@ -146,6 +146,8 @@ def GenerateCSV():
 		sortParts()
 		if mainFile.SaveBOMInCSV(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
+		else:
+			statusLabel['text'] = "Saved: " + str(root.path_to_save)
 	else:
 		messagebox.showerror("Cannot generate .CSV", "No SCH File loaded")
 def Break():
@@ -184,7 +186,7 @@ def checklower(lowest_known, to_compare):
 					return 1 #if to_compare is shorter but a digit in the string is higher than it is still lower
 			return 0
 		if lowest_known[i] > to_compare[i]:
-			#print("2hier return hij")
+			
 			if lowest_known[i].isdigit() and to_compare[i].isdigit():
 				if len(lowest_known) == len(to_compare):
 					return 1
@@ -243,11 +245,11 @@ def loadCSV():
 		except IOError:
 			messagebox.showerror("File IO Error", ".SCH cannot be edited")
 		else:
-			data_test_dump = f.readlines()[0]
+			#data_test_dump = f.readlines()[0]
 			f.close()
-			#print(data_test_dump)
 
 		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in data_test_dump:
+			#this is a bug waiting to happen and not compatible with the FieldKeywords.conf 
 			#verify it conforms to KiCAD Partslist-editor specs
 			if openCSVFile.getComponents():
 				openCSVFile.deleteContents()
@@ -255,29 +257,21 @@ def loadCSV():
 			f = open(filename)
 
 			openCSVFile.setContents(f.readlines())
-			#openCSVFile.printContents()
-			#openCSVFile.printLine(1)
 
 			if openCSVFile.generateCSVComponents():
 				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 			else:
-				messagebox.showinfo("Import Complete",str(openCSVFile.getNumberOfComponents()) + " components were imported.")
-			
-			#openCSVFile.printComponents()
-			#for i in range (len(mainFile.getComponents())):
-			#	print(mainFile.getComponents()[i].GetAnnotation())
-			#mainFile.ModifyNewSCHFile(0, openCSVFile)
+				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(openCSVFile.getNumberOfComponents()) + " components were imported"
 
 			f.close()
-			#mainFile.ParseComponents()
+
 		else:
 			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
 
 	else:
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
-#	for i in openCSVFile.getComponents():
-#		i.printprops()
+
 	
 def BuildNewSCH():
 	initialDirectory = root.initialDirectory
@@ -288,6 +282,8 @@ def BuildNewSCH():
 		if savePath:
 			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
+			else:
+				statusLabel['text'] = str(savePath) + " updated with new field values"
 	else:
 		if mainFile.getComponents():
 			messagebox.showerror("Processing Error", "No CSV File Loaded")
@@ -295,18 +291,19 @@ def BuildNewSCH():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")
+			
+			
 def CleanMemory():
 	mainFile.deleteContents()
 	openCSVFile.deleteContents()
-root = Tk()
+	statusLabel['text'] = "Memory cleared \n All stored components deleted!"
 
 def showAboutDialog():
 	messagebox.showinfo("About KiCad Partslist Editor", "Use this tool to comfortably modify many parts fields in your favourite spreadsheet programm (e.g. LibreOffice Calc)\n" +
 						"Written by BPJWES\n" +
 						"https://github.com/BPJWES/KiCAD_Partslist_editor")
 
-
-#def mainloop():
+root = Tk()
 
 root.initialDirectory = ""
 root.configure(background='white')
@@ -342,8 +339,8 @@ e.grid(row = 2, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 b = ttk.Button(root, text="About", command=showAboutDialog)
 b.grid(row = 3, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
-#h = ttk.Button(root, text="Clean Memory", command=CleanMemory)
-#h.grid(row = 4, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+h = ttk.Button(root, text="Clear Component Memory", command=CleanMemory)
+h.grid(row = 3, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 #i = ttk.Button(root, text="Exit", command=Break)
 #i.grid(row = 5, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
@@ -353,8 +350,4 @@ statusLabel['background'] = "white"
 statusLabel.grid(row = 4, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady = 5)
 
 
-#while 1:
-#	root.update()
-#	print("hoi")
-# this is supposed to enable interactive interface (show if
 mainloop()
