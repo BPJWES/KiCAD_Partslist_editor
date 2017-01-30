@@ -3,6 +3,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
+from configparser import ConfigParser
+import os
 
 
 mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
@@ -48,8 +50,10 @@ def ReadSettings():
 		print("incorrect config file")
 
 def OpenFile():
+	config = ConfigParser()
+	config.read('config.ini')
     
-	initialDirectory = root.initialDirectory
+	initialDirectory = config.get('main', 'lastDirectory', fallback="")
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	else:
@@ -57,6 +61,14 @@ def OpenFile():
 	filename = root.filename
 	root.SCHFILELAST = filename
 
+
+	config.read('config.ini')
+	if config.has_section('main') == FALSE:
+		config.add_section('main')
+	config.set('main', 'lastDirectory', os.path.dirname(filename))
+
+	with open('config.ini', 'w') as f:
+		config.write(f)
 
 	
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
@@ -109,10 +121,15 @@ def OpenFile():
 		if "?" in mainFile.getComponents()[i].GetAnnotation():
 			if messagebox.askyesno("Annotation Incomplete", "The program is unable to process unanotated components. Do you want to clear imported data?"):
 				mainFile.deleteContents()
-
 			break
 		#mainFile.getComponents()[i].generateProperties()
 	root.initialDirectory = setInitialDirectory(filename)
+
+	if mainFile.getSchematicName():
+		statusLabel['text'] = "Loaded schematic: " + mainFile.getSchematicName()
+	else:
+		statusLabel['text'] = "Start by loading a KiCad schematic file..."
+
 	
 	
 def setInitialDirectory(filename):
@@ -283,35 +300,58 @@ def CleanMemory():
 	openCSVFile.deleteContents()
 root = Tk()
 
+def showAboutDialog():
+	messagebox.showinfo("About KiCad Partslist Editor", "Use this tool to comfortably modify many parts fields in your favourite spreadsheet programm (e.g. LibreOffice Calc)\n" +
+						"Written by BPJWES\n" +
+						"https://github.com/BPJWES/KiCAD_Partslist_editor")
+
 
 #def mainloop():
 
 root.initialDirectory = ""
 root.configure(background='white')
-root.title("KiCAD Partslist-editor")
+root.title("KiCad Partslist Editor")
 root.bind("<Escape>", lambda e: e.widget.quit())
 background_image = PhotoImage(file="KICAD_PLE.png")
 background = Label(root, image=background_image, bd=0)
-background.pack()
+background.grid(row = 0, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady = 5)
 ReadSettings()
 
 
-b = ttk.Button(root, text="Open File", command=OpenFile)
-b.pack()
-c = ttk.Button(root, text="Generate CSV", command=GenerateCSV)
-c.pack()
+b = ttk.Button(root, text="Load Schematic", command=OpenFile)
+b.grid(row = 1, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5, )
+
+g = ttk.Button(root, text="Save Schematic", command=BuildNewSCH)
+g.grid(row = 2, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+
+c = ttk.Button(root, text="Export CSV", command=GenerateCSV)
+c.grid(row = 1, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+f = ttk.Button(root, text="Import CSV", command=loadCSV)
+f.grid(row = 2, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+
 d = ttk.Button(root, text="List Parts", command=listParts)
-d.pack()
+d.grid(row = 1, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
 e = ttk.Button(root, text="Sort Parts", command=sortParts)
-e.pack()
-f = ttk.Button(root, text="LoadCSV", command=loadCSV)
-f.pack()
-g = ttk.Button(root, text="SaveNewSCH", command=BuildNewSCH)
-g.pack()
-h = ttk.Button(root, text="CleanMemory", command=CleanMemory)
-h.pack()
-i = ttk.Button(root, text="End", command=Break)
-i.pack()
+e.grid(row = 2, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+
+b = ttk.Button(root, text="About", command=showAboutDialog)
+b.grid(row = 3, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+#h = ttk.Button(root, text="Clean Memory", command=CleanMemory)
+#h.grid(row = 4, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+#i = ttk.Button(root, text="Exit", command=Break)
+#i.grid(row = 5, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
+
+statusLabel = ttk.Label(root, text="Start by loading a KiCad schematic file...")
+statusLabel['background'] = "white"
+statusLabel.grid(row = 4, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady = 5)
+
 
 #while 1:
 #	root.update()
