@@ -12,7 +12,7 @@ KiCad Partslist Editor (PLE) allows you to export/import customizable fields fro
 
 ## Installation
 
-Running KiCad Partslist-editor using windows, requires Python 3 and the TKinter.
+Running KiCad Partslist-editor using windows, requires either Python 3 and TKinter, or you can run the compiled version, which can be found in the folder \build\exe.win32-3.4\
 
 On linux you have to install python3 and python3-tk with  
 ```sudo apt-get install python3 python3-tk```  
