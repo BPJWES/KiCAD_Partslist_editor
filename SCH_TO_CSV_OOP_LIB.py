@@ -193,7 +193,9 @@ class SCH_FILE(object):
 		for count in range(len(content)):
 			if "$Sheet" in content[count]:
 				for subcounter in range(10):
-					if "F1 " in content[count+subcounter]:
+					# TODO 1: this is very bad style of parsing the lines. Fix this!
+					# it leads to an "out of range" if $EndSheet comes before count+subcounter
+					if count+subcounter < len(content) and "F1 " in content[count+subcounter]: # added a quick-fix to the problem described above!
 						#print(content[count+subcounter])
 						test_var = 0
 						for p in range(len(content[count+subcounter])):
