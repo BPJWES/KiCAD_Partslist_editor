@@ -10,7 +10,7 @@ import schematicfile
 import kicadfield
 
 
-mainFile = SchematicFile()
+mainFile = schematicfile.SchematicFile()
 csvFile = csvfile.CsvFile()
 initialDirectory = "" 
 fieldsConfigFile = "FieldKeywords.conf"
@@ -29,7 +29,7 @@ def ReadSettings():
 		
 		for line in range(1, len(configfile)-1):
 			initPos =1
-			newField = KicadField()
+			newField = kicadfield.KicadField()
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
 				
@@ -170,7 +170,7 @@ def listParts():
 
 				c = Entry(sub, text="")
 				c.grid(row=i, column=2)
-				c.insert(0,mainFile.getComponents()[i].GetName())
+				c.insert(0, mainFile.getComponents()[i].getName())
 
 				d = Entry(sub, text="")
 				d.grid(row=i, column=3)
@@ -251,7 +251,8 @@ def loadCSV():
 			#data_test_dump = f.readlines()[0]
 			f.close()
 
-		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in data_test_dump:
+		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or \
+                        "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in dataTestDump:
 			#this is a bug waiting to happen and not compatible with the FieldKeywords.conf 
 			#verify it conforms to KiCAD Partslist-editor specs
 			if csvFile.getComponents():

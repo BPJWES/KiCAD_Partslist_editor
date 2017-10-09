@@ -1,4 +1,8 @@
 
+
+
+
+
 class Component:
 	def __init__(self):
 		self.startposition = 0
@@ -19,10 +23,10 @@ class Component:
 	def endpos(self ,x):
 		self.endposition = x
 
-	def SetName(self ,x):
+	def setName(self, x):
 		self.name = x
 
-	def GetName(self):
+	def getName(self):
 		return self.name
 
 	def setAnnotation(self, x):
@@ -106,7 +110,6 @@ class Component:
         # function to create a clean string to generate new entries
         positions = []
         for r in range(len(lineToBeCleaned)):
-
             if lineToBeCleaned[r] == "\"":
                 positions.append(r)
         if (len(positions) > 2):
@@ -156,3 +159,4 @@ class Component:
                         else:
                             schProperty[2] = schProperty[1]
                             schProperty[3] = 0  # 0 IS FLAG FOR NEW FIELDNAME
+

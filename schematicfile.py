@@ -1,9 +1,10 @@
 
 
 import component
+import os
 
 
-class SchematicFile(object):
+class SchematicFile:
 	def __init__(self):
 		self.contents = ""
 		self.numb_of_comps = 0
@@ -11,7 +12,7 @@ class SchematicFile(object):
 		self.number_of_subcircuits = 0
 		self.components = []
 		self.subcircuits = []
-		self.SchematicName = ""
+		self.schematicName = ""
 		self.path = ""
 		self.fieldList = ""
 
@@ -22,10 +23,10 @@ class SchematicFile(object):
 		return self.path
 
 	def setSchematicName(self, x):
-		self.SchematicName = x
+		self.schematicName = x
 
 	def getSchematicName(self):
-		return self.SchematicName
+		return self.schematicName
 
 	def SetContents(self,content):
 		#load the contents of the .sch file
@@ -59,7 +60,7 @@ class SchematicFile(object):
 		print(self.components)
 		print(self.subcircuits_names)
 		print(self.number_of_subcircuits)
-		print(self.SchematicName)
+		print(self.schematicName)
 
 	def ParseSubCircuits(self):
 		content = self.contents
@@ -72,6 +73,7 @@ class SchematicFile(object):
 					if count+subcounter < len(content) and "F1 " in content[count+subcounter]: # added a quick-fix to the problem described above!
 						#print(content[count+subcounter])
 						test_var = 0
+						endOfString = 0
 						for p in range(len(content[count+subcounter])):
 							if content[count+subcounter][p] == "\"":
 								if test_var == 0:
@@ -98,7 +100,7 @@ class SchematicFile(object):
 					if "#" in content[test_var+1]:
 						break
 					if count == test_var:
-						self.components.append(Component())
+						self.components.append(component.Component())
 						self.number_of_components(self.get_number_of_components() + 1)
 						LastComponent = self.getLastComponent()
 						LastComponent.startpos(count)
@@ -110,7 +112,7 @@ class SchematicFile(object):
 							for i in range(len(content[count])):
 								if content[count][len(content[count])-(i+1)] == " ":
 									LastComponent.setAnnotation(content[count][-(i):-1])
-									LastComponent.SetName(content[count][2:-(i+1)])
+									LastComponent.setName(content[count][2:-(i + 1)])
 									break
 
 					if "F 1 " in content[count] : #find f1 indicating value field in EEschema file format
@@ -191,7 +193,7 @@ class SchematicFile(object):
 				#Add Line with component and fields
 				f.write(self.getComponents()[item].GetAnnotation())
 				f.write(",")
-				f.write(self.getComponents()[item].GetName())
+				f.write(self.getComponents()[item].getName())
 				f.write(",")
 				for field in self.fieldList:
 				#match fields to component.field
@@ -224,7 +226,7 @@ class SchematicFile(object):
 
 			for i in range (CSV_FILE.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
-					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.SchematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
+					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.schematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
 						selected_component = self.getComponents()[p]
 						selected_component.addNewInfo(CSV_FILE.getComponents()[i].PropertyList)
@@ -268,6 +270,6 @@ class SchematicFile(object):
 		self.number_of_subcircuits = 0
 		self.components = []
 		self.subcircuits = []
-		self.SchematicName = ""
+		self.schematicName = ""
 		self.path = ""
 
