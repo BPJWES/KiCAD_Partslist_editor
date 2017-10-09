@@ -1,4 +1,3 @@
-import SCH_TO_CSV_OOP_LIB
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -6,18 +5,22 @@ from tkinter import messagebox
 from configparser import ConfigParser
 import os
 
+import csvfile
+import schematicfile
+import kicadfield
 
-mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
-openCSVFile = SCH_TO_CSV_OOP_LIB.CSV_FILE()
+
+mainFile = SchematicFile()
+csvFile = csvfile.CsvFile()
 initialDirectory = "" 
-FieldsConfigFile = "FieldKeywords.conf"
-Fieldlist = [];
+fieldsConfigFile = "FieldKeywords.conf"
+fieldList = [];
 
 
 def ReadSettings():
 	
 	try:
-		f = open(FieldsConfigFile)
+		f = open(fieldsConfigFile)
 		
 	except IOError:
 		print("Error: can\'t find file or read data")
@@ -26,7 +29,7 @@ def ReadSettings():
 		
 		for line in range(1, len(configfile)-1):
 			initPos =1
-			newField = SCH_TO_CSV_OOP_LIB.KiCAD_Field()
+			newField = KicadField()
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
 				
@@ -42,8 +45,8 @@ def ReadSettings():
 					
 				newField.appendAlias(configfile[line][initPos+1:-2])
 				
-			global Fieldlist
-			Fieldlist.append(newField)
+			global fieldList
+			fieldList.append(newField)
 			
 		
 	else:
@@ -91,7 +94,7 @@ def OpenFile():
 				print("Error: can\'t find file or read data")
 			else:
 				mainFile.SetContents(f.readlines())
-				mainFile.fieldList = Fieldlist;
+				mainFile.fieldList = fieldList;
 				#print(FieldList)
 
 				for i  in range(len(filename)): # get the last part of the file path
@@ -251,17 +254,17 @@ def loadCSV():
 		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in data_test_dump:
 			#this is a bug waiting to happen and not compatible with the FieldKeywords.conf 
 			#verify it conforms to KiCAD Partslist-editor specs
-			if openCSVFile.getComponents():
-				openCSVFile.deleteContents()
+			if csvFile.getComponents():
+				csvFile.deleteContents()
 
 			f = open(filename)
 
-			openCSVFile.setContents(f.readlines())
+			csvFile.setContents(f.readlines())
 
-			if openCSVFile.generateCSVComponents():
+			if csvFile.generateCSVComponents():
 				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 			else:
-				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(openCSVFile.getNumberOfComponents()) + " components were imported"
+				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(csvFile.getNumberOfComponents()) + " components were imported"
 
 			f.close()
 
@@ -275,19 +278,19 @@ def loadCSV():
 	
 def BuildNewSCH():
 	initialDirectory = root.initialDirectory
-	if mainFile.getComponents() and openCSVFile.getComponents():
+	if mainFile.getComponents() and csvFile.getComponents():
 		print(root.SCHFILELAST)
 		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
+			if mainFile.ModifyNewSCHFile(0, csvFile, savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 			else:
 				statusLabel['text'] = str(savePath) + " updated with new field values"
 	else:
 		if mainFile.getComponents():
 			messagebox.showerror("Processing Error", "No CSV File Loaded")
-		elif openCSVFile.getComponents():
+		elif csvFile.getComponents():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")
@@ -295,7 +298,7 @@ def BuildNewSCH():
 			
 def CleanMemory():
 	mainFile.deleteContents()
-	openCSVFile.deleteContents()
+	csvFile.deleteContents()
 	statusLabel['text'] = "Memory cleared \n All stored components deleted!"
 
 def showAboutDialog():
