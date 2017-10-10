@@ -433,9 +433,14 @@ class Component:
 
     def generatePropertyLine(self, property_nr):
         cleanLine = self.getCleanLine(self.contents[self.lastContentLine])
-        self.lastFieldLineNr = self.lastFieldLineNr + 1
-        propertyString = cleanLine[:2] + str(self.lastFieldLineNr) + cleanLine[3:5] + self.propertyList[property_nr][
-            1] + cleanLine[5:-1] + " \"" + self.propertyList[property_nr][0] + "\"" + "\n"
+        self.lastFieldLineNr += 1
+        propertyString = cleanLine[:2] + str(self.lastFieldLineNr) + cleanLine[3:5] + \
+						 self.propertyList[property_nr][1] + cleanLine[5:-1] + \
+						 " \"" + self.propertyList[property_nr][0] + "\"" + "\n"
+
+        if "CNN \"\"" in propertyString :
+            a = 5
+
         return propertyString
 
     def addNewInfo(self, csvPropertyList):
