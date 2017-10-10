@@ -116,7 +116,7 @@ class Schematic:
 							i = 0
 							for i in range(len(content[count])):
 								if content[count][len(content[count])-(i+1)] == " ":
-									lastComponent.setAnnotation(content[count][-(i):-1])
+									lastComponent.setReference(content[count][-(i):-1])
 									lastComponent.setName(content[count][2:-(i + 1)])
 									break
 
@@ -198,7 +198,7 @@ class Schematic:
 			f.write("\n")
 			for item in range(self.get_number_of_components()):
 				#Add Line with component and fields
-				f.write(self.getComponents()[item].getAnnotation())
+				f.write(self.getComponents()[item].getReference())
 				f.write(",")
 				f.write(self.getComponents()[item].getName())
 				f.write(",")
@@ -233,7 +233,7 @@ class Schematic:
 
 			for i in range (csvFile.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
-					if csvFile.getComponents()[i].getAnnotation() == self.getComponents()[p].getAnnotation() and \
+					if csvFile.getComponents()[i].getReference() == self.getComponents()[p].getReference() and \
                                     self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
 						selectedComponent = self.getComponents()[p]
@@ -300,7 +300,7 @@ class Component:
         self.endPosition = 0
         self.schematicName = ""
         self.name = ""
-        self.annotation = ""
+        self.reference = ""
         self.value = ""
         # refactor the field extraction
         self.propertyList = []
@@ -321,11 +321,11 @@ class Component:
     def getName(self):
         return self.name
 
-    def setAnnotation(self, x):
-        self.annotation = x
+    def setReference(self, x):
+        self.reference = x
 
-    def getAnnotation(self):
-        return self.annotation
+    def getReference(self):
+        return self.reference
 
     def setValue(self, x):
         self.value = x
@@ -335,7 +335,7 @@ class Component:
 
     def printProps(self):
         print(self.name)
-        print(self.annotation)
+        print(self.reference)
         print(self.value)
         print(self.schematicName)
 
@@ -343,7 +343,7 @@ class Component:
         print(self.startPosition)
         print(self.endPosition)
         print(self.name)
-        print(self.annotation)
+        print(self.reference)
         print(self.value)
         print(self.schematicName)
 
@@ -461,7 +461,7 @@ class Component:
 
 class CsvComponent(object):
 	def __init__(self):
-		self.annotation = ""
+		self.reference = ""
 		self.value = ""
 		self.name = ""
 		self.schematic = ""
@@ -473,7 +473,7 @@ class CsvComponent(object):
 		self.fieldList = [];
 		self.fieldOrder = [];
 	def printprops(self):
-		print(self.annotation)
+		print(self.reference)
 
 	def setName(self,name):
 		self.name = name
@@ -481,11 +481,11 @@ class CsvComponent(object):
 	def getName(self):
 		return self.name
 
-	def setAnnotation(self, annotation):
-		self.annotation = annotation
+	def setReference(self, reference):
+		self.reference = reference
 
-	def getAnnotation(self):
-		return self.annotation
+	def getReference(self):
+		return self.reference
 
 	def setValue(self,value):
 		self.value = value
@@ -546,7 +546,7 @@ class CsvFile(object):
 			self.endPosition = 0
 			self.schematicName = ""
 			self.name = ""
-			self.annotation = ""
+			self.reference = ""
 			self.value = ""
 			self.fieldList = []
 
@@ -596,7 +596,7 @@ class CsvFile(object):
 				for p in range(len(self.contents[i])):
 					if self.contents[i][p] == delimiter:
 							if counter == 0:
-								self.components[i-1].setAnnotation(self.contents[i][positionLast:p])
+								self.components[i-1].setReference(self.contents[i][positionLast:p])
 							field_content = self.contents[i][positionLast:p]
 							new_csv_component.appendToPropertyList([self.fieldList[counter],field_content])
 
@@ -616,7 +616,7 @@ class CsvFile(object):
 		self.FarnellLink = ""
 		self.schematicName = ""
 		self.name = ""
-		self.annotation = ""
+		self.reference = ""
 		self.value = ""
 		#break
 

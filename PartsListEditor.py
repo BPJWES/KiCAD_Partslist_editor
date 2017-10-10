@@ -124,7 +124,7 @@ def load_schematic():
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
 
 	for i in range (len(mainSchematicFile.getComponents())):
-		if "?" in mainSchematicFile.getComponents()[i].getAnnotation():
+		if "?" in mainSchematicFile.getComponents()[i].getReference():
 			if messagebox.askyesno("Annotation Incomplete",
                     "The program is unable to process unanotated components. Do you want to clear imported data?"):
 				mainSchematicFile.deleteContents()
@@ -172,7 +172,7 @@ def list_parts():
 		for i in range(height): #Rows
 				b = Entry(sub, text="")
 				b.grid(row=i, column=1)
-				b.insert(0, mainSchematicFile.getComponents()[i].getAnnotation())
+				b.insert(0, mainSchematicFile.getComponents()[i].getReference())
 
 				c = Entry(sub, text="")
 				c.grid(row=i, column=2)
@@ -229,11 +229,11 @@ def sort_parts():
 	mainSchematicFile.get_number_of_components()
 	componentNameList = []
 	for i in range (mainSchematicFile.get_number_of_components()):
-		componentNameList.append(mainSchematicFile.getComponents()[i].getAnnotation())
+		componentNameList.append(mainSchematicFile.getComponents()[i].getReference())
 	sort_list(componentNameList)
 	for i in range (mainSchematicFile.get_number_of_components()):
 		for p in range(i, mainSchematicFile.get_number_of_components()):
-			if componentNameList[i] == mainSchematicFile.getComponents()[p].getAnnotation():
+			if componentNameList[i] == mainSchematicFile.getComponents()[p].getReference():
 				mainSchematicFile.SwapComponents(i, p)
 
 
