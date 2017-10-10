@@ -5,13 +5,12 @@ from tkinter import messagebox
 from configparser import ConfigParser
 import os
 
-import csvfile
-import schematicfile
-import kicadfield
+
+import kicadple
 
 
-mainFile = schematicfile.SchematicFile()
-csvFile = csvfile.CsvFile()
+mainFile = kicadple.Schematic()
+csvFile = kicadple.CsvFile()
 initialDirectory = "" 
 fieldsConfigFile = "FieldKeywords.conf"
 fieldList = [];
@@ -29,7 +28,7 @@ def read_settings():
 		
 		for line in range(1, len(configfile)-1):
 			initPos =1
-			newField = kicadfield.KicadField()
+			newField = kicadple.KicadField()
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
 				
@@ -62,7 +61,7 @@ def open_file():
 	else:
 		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
-	root.SCHFILELAST = filename
+	root.lastSchematicFileName = filename
 
 
 	config.read('config.ini')
@@ -235,6 +234,7 @@ def sort_parts():
 			if componentNameList[i] == mainFile.getComponents()[p].getAnnotation():
 				mainFile.SwapComponents(i,p)
 
+
 def load_csv():
 	initialDirectory = root.initialDirectory
 	mainFile.printprops()
@@ -251,7 +251,7 @@ def load_csv():
 		try:
 			f = open(filename)
 		except IOError:
-			messagebox.showerror("File IO Error", ".SCH cannot be edited")
+			messagebox.showerror("File IO Error", "Cannot open CSV File " + filename)
 		else:
 			#dataTestDump = f.readlines()[0]
 			f.close()
@@ -285,8 +285,8 @@ def load_csv():
 def build_new_schematic():
 	initialDirectory = root.initialDirectory
 	if mainFile.getComponents() and csvFile.getComponents():
-		print(root.SCHFILELAST)
-		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+		print(root.lastSchematicFileName)
+		savePath = filedialog.asksaveasfilename(initialfile = root.lastSchematicFileName, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
 			if mainFile.ModifyNewSCHFile(0, csvFile, savePath):
