@@ -4,7 +4,11 @@ import component
 import os
 
 
-
+# The Schematic class
+# holds its filename and all the subcircuits.
+# The components in this schematic are also stored here.
+# The main methods are parseSubCircuits (to get the hierarchical schematic tree)
+# and the parseComponents, which extracts the components of this single schematic.
 class Schematic:
 	def __init__(self):
 		self.contents = "" # list of all text lines in the schematic
@@ -57,10 +61,10 @@ class Schematic:
 		self.numb_of_comps = self.numb_of_comps + 1
 
 	def printprops(self):
-		print(self.numb_of_comps)
+		print(self.nrOfComponents)
 		print(self.components)
-		print(self.subcircuits_names)
-		print(self.number_of_subcircuits)
+		print(self.namesOfSubcircuits)
+		print(self.nrOfSubcircuits)
 		print(self.schematicName)
 
 	def parseSubCircuits(self):
@@ -101,7 +105,7 @@ class Schematic:
 					if "#" in content[test_var+1]:
 						break
 					if count == test_var:
-						self.components.append(component.Component())
+						self.components.append(Component())
 						self.set_number_of_components(self.get_number_of_components() + 1)
 						lastComponent = self.getLastComponent()
 						lastComponent.setStartPos(count)
@@ -136,7 +140,7 @@ class Schematic:
 
 					lastComponent.setEndPos(count)
 					lastComponent.contents = content[lastComponent.startPosition:lastComponent.endPosition]
-					lastComponent.generateProperties()
+					lastComponent.extractProperties()
 			#		print("parsed")
 				if test_var > 100000: # prevents fails
 					break
@@ -157,12 +161,14 @@ class Schematic:
 			else:
 				self.append_subcircuit(Schematic())
 				self.get_subcircuit(subcircuitCounter).setPath(to_open)
-				self.get_subcircuit(subcircuitCounter).SetContents(f.readlines())
+				self.get_subcircuit(subcircuitCounter).setContents(f.readlines())
 				f.close()
 				self.get_subcircuit(subcircuitCounter).setSchematicName(self.namesOfSubcircuits[subcircuitCounter])
 				self.get_subcircuit(subcircuitCounter).fieldList = self.fieldList
 				self.get_subcircuit(subcircuitCounter).ParseComponents()
 				self.AppendComponents(self.get_subcircuit(subcircuitCounter).getComponents())
+
+
 	def get_subcircuit(self, x):
 		return self.subcircuits[x]
 
@@ -216,30 +222,34 @@ class Schematic:
 	def getSubCircuits(self):
 		return self.subcircuits
 
-	def ModifyNewSCHFile(self, oldSCHFile, CSV_FILE, savepath):
+	def ModifyNewSCHFile(self, oldSCHFile, csvFile, savepath):
 		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		# should be fixed now but am not sure
 
-		print("Number of Parts in CSV: " + str(CSV_FILE.getNumberOfComponents()))
+		print("Number of Parts in CSV: " + str(csvFile.getNumberOfComponents()))
 		print("Number of Parts in this SCH: " + str(self.get_number_of_components()))
 
-		if CSV_FILE.getNumberOfComponents() and self.get_number_of_components():
+		if csvFile.getNumberOfComponents() and self.get_number_of_components():
 
-			for i in range (CSV_FILE.getNumberOfComponents()):#Loop over csv_components
+			for i in range (csvFile.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
-					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].getAnnotation() and self.schematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
+					if csvFile.getComponents()[i].getAnnotation() == self.getComponents()[p].getAnnotation() and \
+                                    self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
-						selected_component = self.getComponents()[p]
-						selected_component.addNewInfo(CSV_FILE.getComponents()[i].propertyList)
+						selectedComponent = self.getComponents()[p]
+						selectedComponent.addNewInfo(csvFile.components[i].propertyList)
 
-						for property in range(len(selected_component.propertyList)):
+						for property in range(len(selectedComponent.propertyList)):
 
-							if not selected_component.propertyList[property][3] == 0: #Not exists for adding fields through .csv
+							if not selectedComponent.propertyList[property][3] == 0: #Not exists for adding fields through .csv
 							#Datafield existed in original file
 
-								self.contents[selected_component.startposition+selected_component.propertyList[property][3]] = selected_component.propertyList[property][2]
+								self.contents[selectedComponent.startPosition+selectedComponent.propertyList[property][3]] = \
+                                    selectedComponent.propertyList[property][2]
 							else:
-								self.contents[selected_component.startposition+selected_component.lastContentLine] = self.contents[selected_component.startposition+selected_component.lastContentLine] + selected_component.generatePropertyLine(property)
+								self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] = \
+                                    self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] + \
+                                    selectedComponent.generatePropertyLine(property)
 							#datafield not in original file
 			try:
 				f = open(savepath, 'w')
@@ -251,9 +261,9 @@ class Schematic:
 				f.close
 
 			for i in range(len(self.subcircuits)):
-				new_savepath = os.path.join(os.path.dirname(savepath), self.subcircuits_names[i])
-				print(new_savepath)
-				self.subcircuits[i].ModifyNewSCHFile(0, CSV_FILE, new_savepath)
+				newSavePath = os.path.join(os.path.dirname(savepath), self.namesOfSubcircuits[i])
+				print(newSavePath)
+				self.subcircuits[i].ModifyNewSCHFile(0, csvFile, newSavePath)
 				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 		else:
 			print("No components loaded")
@@ -266,9 +276,9 @@ class Schematic:
 		for i in range (len(self.components)):
 			del self.components[0]
 		self.contents = ""
-		self.numb_of_comps = 0
-		self.subcircuits_names = []
-		self.number_of_subcircuits = 0
+		self.nrOfComponents = 0
+		self.namesOfSubcircuits = []
+		self.nrOfSubcircuits = 0
 		self.components = []
 		self.subcircuits = []
 		self.schematicName = ""
@@ -281,7 +291,8 @@ class Schematic:
 
 # The Component Class
 # contains all the lines of a Schematic file, which belong to one component.
-# it provides a
+# it provides two main methods:
+#
 
 class Component:
     def __init__(self):
@@ -348,7 +359,7 @@ class Component:
     def getEndLine(self):
         return self.endPosition
 
-    def generateProperties(self):
+    def extractProperties(self):
         # parse the contents of a component for Fields
         self.findLastFieldLine()
         for anyField in self.fieldList:
@@ -395,10 +406,9 @@ class Component:
                 positions.append(r)
         if (len(positions) > 2):
             # this line has been contaminated
-            lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + lineToBeCleaned[positions[1]:positions[
-                                                                                                     2] + 1] + lineToBeCleaned[
-                                                                                                               positions[
-                                                                                                                   3]:]
+            lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + \
+                               lineToBeCleaned[positions[1]:positions[2] + 1] + \
+                               lineToBeCleaned[positions[3]:]
         else:
             # this line was clean or there was a tilde sign in there
             if "\"~\"" in lineToBeCleaned:
@@ -458,7 +468,7 @@ class CsvComponent(object):
 		self.startLine = ""
 		self.endLine = ""
 		# refactor the field extraction
-		self.PropertyList = []
+		self.propertyList = []
 		self.Contents = ""
 		self.fieldList = [];
 		self.fieldOrder = [];
@@ -519,10 +529,10 @@ class CsvComponent(object):
 									break
 						Data = self.Contents[line_nr][startOfString:endOfString]
 
-						self.PropertyList.append([anyField.name,Data])#convert to tuple
+						self.propertyList.append([anyField.name,Data])#convert to tuple
 
 	def appendToPropertyList(self,data):
-		self.PropertyList.append(data)#convert to tuple
+		self.propertyList.append(data)#convert to tuple
 
 
 
@@ -531,10 +541,10 @@ class CsvFile(object):
 	def __init__(self):
 			self.contents = []
 			self.components = []
-			self.number_of_components = 0
-			self.startposition = 0
-			self.endposition = 0
-			self.SchematicName = ""
+			self.nrOfComponents = 0
+			self.startPosition = 0
+			self.endPosition = 0
+			self.schematicName = ""
 			self.name = ""
 			self.annotation = ""
 			self.value = ""
@@ -550,11 +560,11 @@ class CsvFile(object):
 		print(self.contents[line])
 
 	def printComponents(self):
-		for i in range (self.number_of_components):
+		for i in range (self.nrOfComponents):
 			print(self.components[i].getFarnellLink())
 
 	def getNumberOfComponents(self):
-			return self.number_of_components
+			return self.nrOfComponents
 
 	def getComponents(self):
 			return self.components
@@ -571,16 +581,16 @@ class CsvFile(object):
 			positionLast = 0
 			for p in range(len(self.contents[0])):
 				if self.contents[0][p] == delimiter:
-					new_csv_field = kicadfield.KicadField()
+					new_csv_field = KicadField()
 					new_csv_field.name = self.contents[0][positionLast:p]
 					self.fieldList.append(new_csv_field)
 					positionLast = p + 1
 			#parse date belonging to component
 			for i in range(1, len(self.contents)):
-				new_csv_component = csvcomponent.CsvComponent()
+				new_csv_component = CsvComponent()
 				new_csv_component.Contents = self.contents[i]
 				self.components.append(new_csv_component)
-				self.number_of_components = self.number_of_components + 1
+				self.nrOfComponents = self.nrOfComponents + 1
 				counter = 0
 				positionLast = 0
 				for p in range(len(self.contents[i])):
@@ -600,11 +610,11 @@ class CsvFile(object):
 			del self.components[0]
 		self.contents = []
 		self.components = []
-		self.number_of_components = 0
-		self.startposition = 0
-		self.endposition = 0
+		self.nrOfComponents = 0
+		self.startPosition = 0
+		self.endPosition = 0
 		self.FarnellLink = ""
-		self.SchematicName = ""
+		self.schematicName = ""
 		self.name = ""
 		self.annotation = ""
 		self.value = ""

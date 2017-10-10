@@ -9,7 +9,7 @@ import os
 import kicadple
 
 
-mainFile = kicadple.Schematic()
+mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
 initialDirectory = "" 
 fieldsConfigFile = "FieldKeywords.conf"
@@ -51,7 +51,7 @@ def read_settings():
 	else:
 		print("incorrect config file")
 
-def open_file():
+def load_schematic():
 	config = ConfigParser()
 	config.read('config.ini')
     
@@ -79,36 +79,39 @@ def open_file():
 		except IOError:
 			print("Error: can\'t find file or read data")
 		else:
-			mainFile.setPath(filename)
+			mainSchematicFile.setPath(filename)
 			dataTestDump = f.readlines()[0]
 			f.close()
 
 		if dataTestDump[:-1] == "EESchema Schematic File Version 2":
+			# TODO 2: move the laoding of a schematic file into the Schematic class!
+			# --> make use of recursive loading of schematics
+
 			#verify it conforms to KiCAD specs
-			if mainFile.getComponents():
-				mainFile.deleteContents()
+			if mainSchematicFile.getComponents():
+				mainSchematicFile.deleteContents()
 			try:
 				f = open(filename)
 			except IOError:
 				print("Error: can\'t find file or read data")
 			else:
-				mainFile.SetContents(f.readlines())
-				mainFile.fieldList = fieldList;
+				mainSchematicFile.SetContents(f.readlines())
+				mainSchematicFile.fieldList = fieldList;
 				#print(FieldList)
 
                 # TODO 2: use os library for filename extraction
 				for i  in range(len(filename)): # get the last part of the file path
 
 					if "/" in filename[len(filename)-1-i]:
-						mainFile.setSchematicName(filename[len(filename)-i:])
+						mainSchematicFile.setSchematicName(filename[len(filename) - i:])
 						break
 					#if "\" in filename[len(filename)-1-i]: UNIX PATH SUPPORT ??
 					#	mainFile.setSchematicName(filename[len(filename)-i:])
 					#	print(mainFile.getSchematicName())
 					#	break
 				f.close()
-				if mainFile.ParseComponents():
-					if(len(mainFile.getSubCircuits()) != len(mainFile.getSubCircuitName())):
+				if mainSchematicFile.ParseComponents():
+					if(len(mainSchematicFile.getSubCircuits()) != len(mainSchematicFile.getSubCircuitName())):
 						messagebox.showerror("FileParseError", "Hierarchical schematics could not be found")
 					else:
 						messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
@@ -120,16 +123,17 @@ def open_file():
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
 
-	for i in range (len(mainFile.getComponents())):
-		if "?" in mainFile.getComponents()[i].getAnnotation():
-			if messagebox.askyesno("Annotation Incomplete", "The program is unable to process unanotated components. Do you want to clear imported data?"):
-				mainFile.deleteContents()
+	for i in range (len(mainSchematicFile.getComponents())):
+		if "?" in mainSchematicFile.getComponents()[i].getAnnotation():
+			if messagebox.askyesno("Annotation Incomplete",
+                    "The program is unable to process unanotated components. Do you want to clear imported data?"):
+				mainSchematicFile.deleteContents()
 			break
 		#mainFile.getComponents()[i].generateProperties()
 	root.initialDirectory = set_initial_directory(filename)
 
-	if mainFile.getSchematicName():
-		statusLabel['text'] = "Loaded schematic: " + mainFile.getSchematicName() + "\n" + str(mainFile.numb_of_comps) + " components were found"
+	if mainSchematicFile.getSchematicName():
+		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.getSchematicName() + "\n" + str(mainSchematicFile.nrOfComponents) + " components were found"
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 
@@ -138,18 +142,18 @@ def open_file():
 def set_initial_directory(filename):
 	for i  in range(len(filename)): # get the last part of the file path
 				if "/" in filename[len(filename)-1-i]:
-					mainFile.setSchematicName(filename[len(filename)-i:])
+					mainSchematicFile.setSchematicName(filename[len(filename) - i:])
 					return filename[:len(filename)-i-1]
 					break
 
 
 def generate_csv():
 	initialDirectory = root.initialDirectory
-	if mainFile.get_number_of_components() > 0:
+	if mainSchematicFile.get_number_of_components() > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
 		root.initialDirectory = initialDirectory = set_initial_directory(root.path_to_save)
 		sort_parts()
-		if mainFile.SaveBOMInCSV(root.path_to_save):
+		if mainSchematicFile.SaveBOMInCSV(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
 		else:
 			statusLabel['text'] = "Saved: " + str(root.path_to_save)
@@ -161,20 +165,18 @@ def my_break():
 	root.quit()
 
 def list_parts():
-	#print("test") this somehow get executed
-	#print("hoi")
-	if mainFile.get_number_of_components() != 0:
+	if mainSchematicFile.get_number_of_components() != 0:
 		sub  = Tk()
-		height = mainFile.get_number_of_components()
+		height = mainSchematicFile.get_number_of_components()
 
 		for i in range(height): #Rows
 				b = Entry(sub, text="")
 				b.grid(row=i, column=1)
-				b.insert(0, mainFile.getComponents()[i].getAnnotation())
+				b.insert(0, mainSchematicFile.getComponents()[i].getAnnotation())
 
 				c = Entry(sub, text="")
 				c.grid(row=i, column=2)
-				c.insert(0, mainFile.getComponents()[i].getName())
+				c.insert(0, mainSchematicFile.getComponents()[i].getName())
 
 				d = Entry(sub, text="")
 				d.grid(row=i, column=3)
@@ -219,25 +221,25 @@ def sort_list(this_list):
 		this_list[i] , this_list[position] = this_list[position] , this_list[i]
 		lowest_known = "zzzzzzz"
 
-	sortList = this_list
+	sortedList = this_list
 
 	return sortedList
 
 def sort_parts():
-	mainFile.get_number_of_components()
+	mainSchematicFile.get_number_of_components()
 	componentNameList = []
-	for i in range (mainFile.get_number_of_components()):
-		componentNameList.append(mainFile.getComponents()[i].getAnnotation())
+	for i in range (mainSchematicFile.get_number_of_components()):
+		componentNameList.append(mainSchematicFile.getComponents()[i].getAnnotation())
 	sort_list(componentNameList)
-	for i in range (mainFile.get_number_of_components()):
-		for p in range(i, mainFile.get_number_of_components()):
-			if componentNameList[i] == mainFile.getComponents()[p].getAnnotation():
-				mainFile.SwapComponents(i,p)
+	for i in range (mainSchematicFile.get_number_of_components()):
+		for p in range(i, mainSchematicFile.get_number_of_components()):
+			if componentNameList[i] == mainSchematicFile.getComponents()[p].getAnnotation():
+				mainSchematicFile.SwapComponents(i, p)
 
 
 def load_csv():
 	initialDirectory = root.initialDirectory
-	mainFile.printprops()
+	mainSchematicFile.printprops()
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
 	else:
@@ -284,17 +286,17 @@ def load_csv():
 	
 def build_new_schematic():
 	initialDirectory = root.initialDirectory
-	if mainFile.getComponents() and csvFile.getComponents():
+	if mainSchematicFile.getComponents() and csvFile.getComponents():
 		print(root.lastSchematicFileName)
 		savePath = filedialog.asksaveasfilename(initialfile = root.lastSchematicFileName, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFile(0, csvFile, savePath):
+			if mainSchematicFile.ModifyNewSCHFile(0, csvFile, savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 			else:
 				statusLabel['text'] = str(savePath) + " updated with new field values"
 	else:
-		if mainFile.getComponents():
+		if mainSchematicFile.getComponents():
 			messagebox.showerror("Processing Error", "No CSV File Loaded")
 		elif csvFile.getComponents():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
@@ -303,7 +305,7 @@ def build_new_schematic():
 			
 			
 def clean_memory():
-	mainFile.deleteContents()
+	mainSchematicFile.deleteContents()
 	csvFile.deleteContents()
 	statusLabel['text'] = "Memory cleared \n All stored components deleted!"
 
@@ -324,7 +326,7 @@ background.grid(row = 0, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady
 read_settings()
 
 
-b = ttk.Button(root, text="Load Schematic", command=open_file)
+b = ttk.Button(root, text="Load Schematic", command=load_schematic)
 b.grid(row = 1, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5, )
 
 g = ttk.Button(root, text="Save Schematic", command=build_new_schematic)
