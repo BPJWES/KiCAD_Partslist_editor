@@ -6,7 +6,7 @@ import os
 
 class SchematicFile:
 	def __init__(self):
-		self.contents = ""
+		self.contents = "" # list of all text lines in the schematic
 		self.numb_of_comps = 0
 		self.subcircuits_names = []
 		self.number_of_subcircuits = 0
@@ -14,7 +14,7 @@ class SchematicFile:
 		self.subcircuits = []
 		self.schematicName = ""
 		self.path = ""
-		self.fieldList = ""
+		self.fieldList = "" # list of KicadField objects
 
 	def setPath(self, path):
 		self.path = path
@@ -35,7 +35,7 @@ class SchematicFile:
 	def SwapComponents(self, i, j):
 		self.components[i] , self.components[j] = self.components[j] , self.components[i]
 
-	def number_of_components(self , x):
+	def set_number_of_components(self, x):
 		self.numb_of_comps = x
 
 	def get_number_of_components(self):
@@ -62,7 +62,7 @@ class SchematicFile:
 		print(self.number_of_subcircuits)
 		print(self.schematicName)
 
-	def ParseSubCircuits(self):
+	def parseSubCircuits(self):
 		content = self.contents
 		ListOfSubSchematics = []
 		for count in range(len(content)):
@@ -90,7 +90,7 @@ class SchematicFile:
 
 	def ParseComponents(self):
 		if self.subcircuits_names == []:
-			self.ParseSubCircuits()
+			self.parseSubCircuits()
 		content = self.contents
 		for count in range(len(content)):
 			if "$Comp" in content[count]:
@@ -101,18 +101,18 @@ class SchematicFile:
 						break
 					if count == test_var:
 						self.components.append(component.Component())
-						self.number_of_components(self.get_number_of_components() + 1)
-						LastComponent = self.getLastComponent()
-						LastComponent.startpos(count)
-						LastComponent.SetSchematicName(self.getSchematicName())
-						LastComponent.fieldList = self.fieldList
+						self.set_number_of_components(self.get_number_of_components() + 1)
+						lastComponent = self.getLastComponent()
+						lastComponent.setStartPos(count)
+						lastComponent.setSchematicName(self.getSchematicName())
+						lastComponent.fieldList = self.fieldList
 
 					if content[count][0] == "L":
 							i = 0
 							for i in range(len(content[count])):
 								if content[count][len(content[count])-(i+1)] == " ":
-									LastComponent.setAnnotation(content[count][-(i):-1])
-									LastComponent.setName(content[count][2:-(i + 1)])
+									lastComponent.setAnnotation(content[count][-(i):-1])
+									lastComponent.setName(content[count][2:-(i + 1)])
 									break
 
 					if "F 1 " in content[count] : #find f1 indicating value field in EEschema file format
@@ -127,15 +127,15 @@ class SchematicFile:
 									endOfString = i
 
 									break
-						LastComponent.setValue(content[count][startOfString:endOfString])
+						lastComponent.setValue(content[count][startOfString:endOfString])
 
 					count = count + 1
 				if not "#" in content[test_var+1]:
 					#ListOfFarnellLinks.append("")
 
-					LastComponent.endpos(count)
-					LastComponent.Contents = content[LastComponent.startposition:LastComponent.endposition]
-					LastComponent.generateProperties()
+					lastComponent.setEndPos(count)
+					lastComponent.contents = content[lastComponent.startPosition:lastComponent.endPosition]
+					lastComponent.generateProperties()
 			#		print("parsed")
 				if test_var > 100000: # prevents fails
 					break
@@ -191,15 +191,15 @@ class SchematicFile:
 			f.write("\n")
 			for item in range(self.get_number_of_components()):
 				#Add Line with component and fields
-				f.write(self.getComponents()[item].GetAnnotation())
+				f.write(self.getComponents()[item].getAnnotation())
 				f.write(",")
 				f.write(self.getComponents()[item].getName())
 				f.write(",")
 				for field in self.fieldList:
 				#match fields to component.field
-					for counter in range(len(self.getComponents()[item].PropertyList)):
-						if self.getComponents()[item].PropertyList[counter][0] == field.name:
-							f.write(self.getComponents()[item].PropertyList[counter][1])
+					for counter in range(len(self.getComponents()[item].propertyList)):
+						if self.getComponents()[item].propertyList[counter][0] == field.name:
+							f.write(self.getComponents()[item].propertyList[counter][1])
 							f.write(",")
 							break
 					else:
@@ -226,17 +226,17 @@ class SchematicFile:
 
 			for i in range (CSV_FILE.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
-					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].GetAnnotation() and self.schematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
+					if CSV_FILE.getComponents()[i].getAnnotation() == self.getComponents()[p].getAnnotation() and self.schematicName ==  CSV_FILE.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
 						selected_component = self.getComponents()[p]
-						selected_component.addNewInfo(CSV_FILE.getComponents()[i].PropertyList)
+						selected_component.addNewInfo(CSV_FILE.getComponents()[i].propertyList)
 
-						for property in range(len(selected_component.PropertyList)):
+						for property in range(len(selected_component.propertyList)):
 
-							if not selected_component.PropertyList[property][3] == 0: #Not exists for adding fields through .csv
+							if not selected_component.propertyList[property][3] == 0: #Not exists for adding fields through .csv
 							#Datafield existed in original file
 
-								self.contents[selected_component.startposition+selected_component.PropertyList[property][3]] = selected_component.PropertyList[property][2]
+								self.contents[selected_component.startposition+selected_component.propertyList[property][3]] = selected_component.propertyList[property][2]
 							else:
 								self.contents[selected_component.startposition+selected_component.lastContentLine] = self.contents[selected_component.startposition+selected_component.lastContentLine] + selected_component.generatePropertyLine(property)
 							#datafield not in original file

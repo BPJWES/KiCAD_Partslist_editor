@@ -4,35 +4,36 @@
 
 
 class Component:
-	def __init__(self):
-		self.startposition = 0
-		self.endposition = 0
-		self.schematicName = ""
-		self.name = ""
-		self.annotation = ""
-		self.value = ""
-		# refactor the field extraction
-		self.propertyList = []
-		self.contents = ""
-		self.fieldList = [];
-		self.lastContentLine = 0
-		self.lastFieldLineNr = 0
-	def startpos(self, x):
-		self.startposition = x
+    def __init__(self):
+        self.startPosition = 0
+        self.endPosition = 0
+        self.schematicName = ""
+        self.name = ""
+        self.annotation = ""
+        self.value = ""
+        # refactor the field extraction
+        self.propertyList = []
+        self.contents = ""
+        self.fieldList = [];
+        self.lastContentLine = 0
+        self.lastFieldLineNr = 0
 
-	def endpos(self ,x):
-		self.endposition = x
+    def setStartPos(self, x):
+        self.startPosition = x
 
-	def setName(self, x):
-		self.name = x
+    def setEndPos(self, x):
+        self.endPosition = x
 
-	def getName(self):
-		return self.name
+    def setName(self, x):
+        self.name = x
 
-	def setAnnotation(self, x):
-		self.annotation = x
+    def getName(self):
+        return self.name
 
-    def GetAnnotation(self):
+    def setAnnotation(self, x):
+        self.annotation = x
+
+    def getAnnotation(self):
         return self.annotation
 
     def setValue(self, x):
@@ -41,31 +42,31 @@ class Component:
     def getValue(self):
         return self.value
 
-    def printprops(self):
+    def printProps(self):
         print(self.name)
         print(self.annotation)
         print(self.value)
         print(self.schematicName)
 
-    def printall(self):
-        print(self.startposition)
-        print(self.endposition)
+    def printAll(self):
+        print(self.startPosition)
+        print(self.endPosition)
         print(self.name)
         print(self.annotation)
         print(self.value)
         print(self.schematicName)
 
-    def SetSchematicName(self, schematic_name):
+    def setSchematicName(self, schematic_name):
         self.schematicName = schematic_name
 
     def GetSchematicName(self):
         return self.schematicName
 
     def getStartLine(self):
-        return self.startposition
+        return self.startPosition
 
     def getEndLine(self):
-        return self.endposition
+        return self.endPosition
 
     def generateProperties(self):
         # parse the contents of a component for Fields

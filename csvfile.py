@@ -1,6 +1,6 @@
 
-import KicadField
-import CsvComponent
+import kicadfield
+import csvcomponent
 
 
 class CsvFile(object):
@@ -47,13 +47,13 @@ class CsvFile(object):
 			positionLast = 0
 			for p in range(len(self.contents[0])):
 				if self.contents[0][p] == delimiter:
-					new_csv_field = KicadField()
+					new_csv_field = kicadfield.KicadField()
 					new_csv_field.name = self.contents[0][positionLast:p]
 					self.fieldList.append(new_csv_field)
 					positionLast = p + 1
 			#parse date belonging to component
 			for i in range(1, len(self.contents)):
-				new_csv_component = CsvComponent()
+				new_csv_component = csvcomponent.CsvComponent()
 				new_csv_component.Contents = self.contents[i]
 				self.components.append(new_csv_component)
 				self.number_of_components = self.number_of_components + 1
