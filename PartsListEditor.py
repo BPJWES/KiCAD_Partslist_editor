@@ -153,7 +153,7 @@ def generate_csv():
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
 		root.initialDirectory = initialDirectory = set_initial_directory(root.path_to_save)
 		sort_parts()
-		if mainSchematicFile.SaveBOMInCSV(root.path_to_save):
+		if mainSchematicFile.exportCsvFile(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
 		else:
 			statusLabel['text'] = "Saved: " + str(root.path_to_save)
@@ -269,7 +269,7 @@ def load_csv():
 
 			csvFile.setContents(f.readlines())
 
-			if csvFile.generateCSVComponents():
+			if csvFile.extractCsvComponents():
 				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 			else:
 				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(csvFile.getNumberOfComponents()) + " components were imported"

@@ -20,6 +20,7 @@ class Schematic:
 		self.schematicName = ""
 		self.path = ""
 		self.fieldList = "" # list of KicadField objects
+		self.delimiter = ";" # TODO 1: make this configurable
 
 	def setPath(self, path):
 		self.path = path
@@ -161,7 +162,7 @@ class Schematic:
 			else:
 				self.append_subcircuit(Schematic())
 				self.get_subcircuit(subcircuitCounter).setPath(to_open)
-				self.get_subcircuit(subcircuitCounter).setContents(f.readlines())
+				self.subcircuits[subcircuitCounter].contents=f.readlines()
 				f.close()
 				self.get_subcircuit(subcircuitCounter).setSchematicName(self.namesOfSubcircuits[subcircuitCounter])
 				self.get_subcircuit(subcircuitCounter).fieldList = self.fieldList
@@ -177,7 +178,7 @@ class Schematic:
 			self.components.append(componentList[item])
 			self.nrOfComponents = self.get_number_of_components() + 1
 
-	def SaveBOMInCSV(self,savepath):
+	def exportCsvFile(self, savepath):
 	#New variant which allows for user configurable field names
 		if not '.csv' in savepath:
 			savepath = savepath + '.csv'
@@ -187,33 +188,36 @@ class Schematic:
 			if savepath:
 				return "error"
 		else:
-			f.write("Part\#")
-			f.write(",")
-			f.write("PartType")
-			f.write(",")
+			line = ""
+			line += "Part\#"
+			line += self.delimiter
+			line += ("PartType")
+			line += (self.delimiter)
 			for field in self.fieldList:
-				f.write(field.name)
-				f.write(",")
-			f.write("Found in: ")
-			f.write("\n")
+				line += (field.name)
+				line += (self.delimiter)
+			line += ("Found in: ")
+			f.write(line + "\n")
+
 			for item in range(self.get_number_of_components()):
+				line = ""
 				#Add Line with component and fields
-				f.write(self.getComponents()[item].getReference())
-				f.write(",")
-				f.write(self.getComponents()[item].getName())
-				f.write(",")
+				line += (self.getComponents()[item].getReference())
+				line += (self.delimiter)
+				line += (self.getComponents()[item].getName())
+				line += (self.delimiter)
 				for field in self.fieldList:
 				#match fields to component.field
 					for counter in range(len(self.getComponents()[item].propertyList)):
 						if self.getComponents()[item].propertyList[counter][0] == field.name:
-							f.write(self.getComponents()[item].propertyList[counter][1])
-							f.write(",")
+							line += (self.getComponents()[item].propertyList[counter][1])
+							line += (self.delimiter)
 							break
-					else:
-						f.write("")
-						f.write(",")
-				f.write(self.getComponents()[item].GetSchematicName())
-				f.write("\n")
+						else:
+							line += ("")
+
+				line += (self.getComponents()[item].GetSchematicName())
+				f.write(line + "\n")
 			f.close
 
 	def getSubCircuitName(self):
@@ -531,10 +535,6 @@ class CsvComponent(object):
 
 						self.propertyList.append([anyField.name,Data])#convert to tuple
 
-	def appendToPropertyList(self,data):
-		self.propertyList.append(data)#convert to tuple
-
-
 
 
 class CsvFile(object):
@@ -569,13 +569,14 @@ class CsvFile(object):
 	def getComponents(self):
 			return self.components
 
-	def generateCSVComponents(self):
+	# reads the content of the CSV and extracts the contained components
+	def extractCsvComponents(self):
 			if "," in self.contents[1]:
 				delimiter = ","
 			elif ";":
-				delimiter = ","
+				delimiter = ";"
 			else:
-				return 'error'
+				return 'error: no delimiter found in CSV'
 
 			# Find the order of the parameters saved in the csv
 			positionLast = 0
@@ -587,9 +588,9 @@ class CsvFile(object):
 					positionLast = p + 1
 			#parse date belonging to component
 			for i in range(1, len(self.contents)):
-				new_csv_component = CsvComponent()
-				new_csv_component.Contents = self.contents[i]
-				self.components.append(new_csv_component)
+				newCsvComponent = CsvComponent()
+				newCsvComponent.Contents = self.contents[i]
+				self.components.append(newCsvComponent)
 				self.nrOfComponents = self.nrOfComponents + 1
 				counter = 0
 				positionLast = 0
@@ -598,12 +599,12 @@ class CsvFile(object):
 							if counter == 0:
 								self.components[i-1].setReference(self.contents[i][positionLast:p])
 							field_content = self.contents[i][positionLast:p]
-							new_csv_component.appendToPropertyList([self.fieldList[counter],field_content])
+							newCsvComponent.propertyList.append([self.fieldList[counter],field_content])
 
 							positionLast = p + 1
 							counter = counter + 1
 				else:
-					new_csv_component.schematic = self.contents[i][positionLast:-1]
+					newCsvComponent.schematic = self.contents[i][positionLast:-1]
 
 	def deleteContents(self):
 		for i in range (len(self.components)):
