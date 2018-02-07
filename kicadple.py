@@ -99,20 +99,22 @@ class Schematic:
 		if self.namesOfSubcircuits == []:
 			self.parseSubCircuits()
 		content = self.contents
+
+		# for each line in the whole schematic file
 		for count in range(len(content)):
 			if "$Comp" in content[count]:
-				lineStartOfComponent = count
+
+				self.components.append(Component())
+				self.set_number_of_components(self.get_number_of_components() + 1)
+				lastComponent = self.getLastComponent()
+				lastComponent.setStartPos(count)
+				lastComponent.setSchematicName(self.getSchematicName())
+				lastComponent.fieldList = self.fieldList
 
 				while not "$EndComp" in content[count]:
-					if "#" in content[lineStartOfComponent+1]: # skip any comment lines
+					if "#" == content[count][0]:  # skip any comment lines
+						count += 1
 						break
-					if count == lineStartOfComponent:
-						self.components.append(Component())
-						self.set_number_of_components(self.get_number_of_components() + 1)
-						lastComponent = self.getLastComponent()
-						lastComponent.setStartPos(count)
-						lastComponent.setSchematicName(self.getSchematicName())
-						lastComponent.fieldList = self.fieldList
 
 					if content[count][0] == "L":
 							i = 0
@@ -152,16 +154,15 @@ class Schematic:
 							lastComponent.setValue(componentValue)
 						else:
 							print("Error: Regex Mismatch, cannot find value in 'F 1' field in line: " + content[count])
+					#end if
 
-					count = count + 1
+					count += 1
 				# end while(not end of component found)
 
 				lastComponent.setEndPos(count)
-				lastComponent.contents = content[lastComponent.startPosition:lastComponent.endPosition]
+				lastComponent.contents = content[lastComponent.startPosition:count]
 				lastComponent.extractProperties()
-
-				if lineStartOfComponent > 100000: # prevents fails
-					break
+			# end if(start of component)
 		# end for(all lines)
 
 		for subcircuitCounter in range(len(self.namesOfSubcircuits)):
@@ -402,14 +403,15 @@ class Component:
 
 				for anyField in self.fieldList:
 					for Alias in anyField.Aliases:
-
 						if Alias == fieldName:
-							if fieldFound[anyField] == True:
+							if fieldFound[anyField] is True:
 								print("Warning: duplicate definition of Field " + fieldName + " with Alias " + Alias
-									  + " for Component " + self.getReference())
+									  + " for Component " + self.getReference()
+									  + " in file " + self.schematicName)
 							fieldFound[anyField] = True
 							self.propertyList.append(
 								[anyField.name, fieldValue, self.contents[line_nr], line_nr])  # convert to tuple
+							break
 		#end for(all lines)
 
 		# set default values for non-found fields:
@@ -419,15 +421,27 @@ class Component:
 
 	def findLastFieldLine(self):
 		line_counter = 0
+		# find firt field line:
 		for line_nr in range(len(self.contents)):
 			if self.contents[line_nr][:2] == "F ":
 				line_counter = line_nr
 				break
+		# and then search for the last field line:
 		for line_nr in range(line_counter, len(self.contents)):
 			if not self.contents[line_nr][:2] == "F ":
 				self.lastContentLine = line_nr - 1
-				self.lastFieldLineNr = int(self.contents[line_nr - 1][2])
-				break
+
+				searchResult = re.search('F +([0-9]+) +"(.*)" .*', self.contents[self.lastContentLine])
+
+				if searchResult:
+					fieldNr = searchResult.group(1)
+
+				# self.lastFieldLineNr = int(self.contents[line_nr - 1][2]) # <<= here is the BUG! braks for numbers with more than 1 digit!
+					self.lastFieldLineNr = fieldNr
+					break
+				else:
+					print("Error: Regex mismatch on extraction of field number in this line: " +
+						  self.contents[self.lastContentLine])
 
 	def getCleanLine(self, lineToBeCleaned):
 		# function to create a clean string to generate new entries
