@@ -2,6 +2,7 @@
 
 import component
 import os
+import re
 
 
 # The Schematic class
@@ -100,12 +101,12 @@ class Schematic:
 		content = self.contents
 		for count in range(len(content)):
 			if "$Comp" in content[count]:
-				test_var = count
+				lineStartOfComponent = count
 
 				while not "$EndComp" in content[count]:
-					if "#" in content[test_var+1]:
+					if "#" in content[lineStartOfComponent+1]: # skip any comment lines
 						break
-					if count == test_var:
+					if count == lineStartOfComponent:
 						self.components.append(Component())
 						self.set_number_of_components(self.get_number_of_components() + 1)
 						lastComponent = self.getLastComponent()
@@ -121,30 +122,47 @@ class Schematic:
 									lastComponent.setName(content[count][2:-(i + 1)])
 									break
 
+					# Example:
+					# AR Path="/56647084/5664BC85" Ref="U501"  Part="2"
+					# the number for Part= varies e.g. from 1 to 4 for a component with 4 Units (e.g. LM324)
+					# NOTE; it is not clear, for what reason we get this record only for some components...
+					# we print just a message
+					# we don't use the data any further
+					if "AR Path=" in content[count] :
+						# extract the path, Ref and Part into regex groups:
+						searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', content[count])
+
+						if searchResult:
+							componentPath = searchResult.group(1)
+							componentRef = searchResult.group(2)
+							componentUnit = searchResult.group(3)
+
+							# Print some messages
+							print('AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
+
+
+
+					# Example:
+					# F 1 "LTC2052IS#PBF" H 9750 5550 50  0000 C CNN
 					if "F 1 " in content[count] : #find f1 indicating value field in EEschema file format
-						testvar = 0
+						searchResult = re.search('F 1 +"(.*)".*', content[count])
 
-						for i in range(len(content[count])):
-							if content[count][i] == "\"":
-								if testvar == 0:
-									startOfString = i+1
-									testvar = 1
-								else:
-									endOfString = i
-
-									break
-						lastComponent.setValue(content[count][startOfString:endOfString])
+						if searchResult:
+							componentValue = searchResult.group(1)
+							lastComponent.setValue(componentValue)
+						else:
+							print("Error: Regex Mismatch, cannot find value in 'F 1' field in line: " + content[count])
 
 					count = count + 1
-				if not "#" in content[test_var+1]:
-					#ListOfFarnellLinks.append("")
+				# end while(not end of component found)
 
-					lastComponent.setEndPos(count)
-					lastComponent.contents = content[lastComponent.startPosition:lastComponent.endPosition]
-					lastComponent.extractProperties()
-			#		print("parsed")
-				if test_var > 100000: # prevents fails
+				lastComponent.setEndPos(count)
+				lastComponent.contents = content[lastComponent.startPosition:lastComponent.endPosition]
+				lastComponent.extractProperties()
+
+				if lineStartOfComponent > 100000: # prevents fails
 					break
+		# end for(all lines)
 
 		for subcircuitCounter in range(len(self.namesOfSubcircuits)):
 
