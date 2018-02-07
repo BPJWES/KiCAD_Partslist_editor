@@ -138,7 +138,7 @@ class Schematic:
 							componentUnit = searchResult.group(3)
 
 							# Print some messages
-							print('AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
+							print('Info: AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
 
 
 
@@ -256,7 +256,7 @@ class Schematic:
 			for i in range (csvFile.getNumberOfComponents()):#Loop over csv_components
 				for p in range (self.get_number_of_components()):#loop over .sch components
 					if csvFile.getComponents()[i].getReference() == self.getComponents()[p].getReference() and \
-                                    self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
+									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
 						selectedComponent = self.getComponents()[p]
 						selectedComponent.addNewInfo(csvFile.components[i].propertyList)
@@ -267,11 +267,11 @@ class Schematic:
 							#Datafield existed in original file
 
 								self.contents[selectedComponent.startPosition+selectedComponent.propertyList[property][3]] = \
-                                    selectedComponent.propertyList[property][2]
+									selectedComponent.propertyList[property][2]
 							else:
 								self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] = \
-                                    self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] + \
-                                    selectedComponent.generatePropertyLine(property)
+									self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] + \
+									selectedComponent.generatePropertyLine(property)
 							#datafield not in original file
 			try:
 				f = open(savepath, 'w')
@@ -317,166 +317,175 @@ class Schematic:
 #
 
 class Component:
-    def __init__(self):
-        self.startPosition = 0
-        self.endPosition = 0
-        self.schematicName = ""
-        self.name = ""
-        self.reference = ""
-        self.value = ""
-        # refactor the field extraction
-        self.propertyList = []
-        self.contents = ""
-        self.fieldList = [];
-        self.lastContentLine = 0
-        self.lastFieldLineNr = 0
+	def __init__(self):
+		self.startPosition = 0
+		self.endPosition = 0
+		self.schematicName = ""
+		self.name = ""
+		self.reference = ""
+		self.value = ""
+		# refactor the field extraction
+		self.propertyList = []
+		self.contents = ""
+		self.fieldList = [];
+		self.lastContentLine = 0
+		self.lastFieldLineNr = 0
 
-    def setStartPos(self, x):
-        self.startPosition = x
+	def setStartPos(self, x):
+		self.startPosition = x
 
-    def setEndPos(self, x):
-        self.endPosition = x
+	def setEndPos(self, x):
+		self.endPosition = x
 
-    def setName(self, x):
-        self.name = x
+	def setName(self, x):
+		self.name = x
 
-    def getName(self):
-        return self.name
+	def getName(self):
+		return self.name
 
-    def setReference(self, x):
-        self.reference = x
+	def setReference(self, x):
+		self.reference = x
 
-    def getReference(self):
-        return self.reference
+	def getReference(self):
+		return self.reference
 
-    def setValue(self, x):
-        self.value = x
+	def setValue(self, x):
+		self.value = x
 
-    def getValue(self):
-        return self.value
+	def getValue(self):
+		return self.value
 
-    def printProps(self):
-        print(self.name)
-        print(self.reference)
-        print(self.value)
-        print(self.schematicName)
+	def printProps(self):
+		print(self.name)
+		print(self.reference)
+		print(self.value)
+		print(self.schematicName)
 
-    def printAll(self):
-        print(self.startPosition)
-        print(self.endPosition)
-        print(self.name)
-        print(self.reference)
-        print(self.value)
-        print(self.schematicName)
+	def printAll(self):
+		print(self.startPosition)
+		print(self.endPosition)
+		print(self.name)
+		print(self.reference)
+		print(self.value)
+		print(self.schematicName)
 
-    def setSchematicName(self, schematic_name):
-        self.schematicName = schematic_name
+	def setSchematicName(self, schematic_name):
+		self.schematicName = schematic_name
 
-    def GetSchematicName(self):
-        return self.schematicName
+	def GetSchematicName(self):
+		return self.schematicName
 
-    def getStartLine(self):
-        return self.startPosition
+	def getStartLine(self):
+		return self.startPosition
 
-    def getEndLine(self):
-        return self.endPosition
+	def getEndLine(self):
+		return self.endPosition
 
-    def extractProperties(self):
-        # parse the contents of a component for Fields
-        self.findLastFieldLine()
-        for anyField in self.fieldList:
-            found = 0
-            for Alias in anyField.Aliases:
-                for line_nr in range(len(self.contents)):
-                    if Alias in self.contents[line_nr]:
-                        # find content
-                        testvar = 0
-                        for i in range(len(self.contents[line_nr])):
-                            if self.contents[line_nr][i] == "\"":
-                                if testvar == 0:
-                                    startOfString = i + 1
-                                    testvar = 1
-                                else:
-                                    endOfString = i
-                                    break
-                        field_code = self.contents[line_nr][2]  # breaks if more then 10 property fields
-                        Data = self.contents[line_nr][startOfString:endOfString]
-                        self.propertyList.append(
-                            [anyField.name, Data, self.contents[line_nr], line_nr])  # convert to tuple
-                        found = 1
-                    # break
-            if found == 0:
-                self.propertyList.append([anyField.name, "", "", 0])  # convert to tuple
+	def extractProperties(self):
+		# parse the contents of a component for Fields
+		self.findLastFieldLine()
 
-    def findLastFieldLine(self):
-        line_counter = 0
-        for line_nr in range(len(self.contents)):
-            if self.contents[line_nr][:2] == "F ":
-                line_counter = line_nr
-                break
-        for line_nr in range(line_counter, len(self.contents)):
-            if not self.contents[line_nr][:2] == "F ":
-                self.lastContentLine = line_nr - 1
-                self.lastFieldLineNr = int(self.contents[line_nr - 1][2])
-                break
+		# temporary dictionay, if we have all fields found
+		fieldFound={}
+		for anyField in self.fieldList:
+			fieldFound[anyField] = False
 
-    def getCleanLine(self, lineToBeCleaned):
-        # function to create a clean string to generate new entries
-        positions = []
-        for r in range(len(lineToBeCleaned)):
-            if lineToBeCleaned[r] == "\"":
-                positions.append(r)
-        if (len(positions) > 2):
-            # this line has been contaminated
-            lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + \
-                               lineToBeCleaned[positions[1]:positions[2] + 1] + \
-                               lineToBeCleaned[positions[3]:]
-        else:
-            # this line was clean or there was a tilde sign in there
-            if "\"~\"" in lineToBeCleaned:
-                # tilde is found in in kicad schematics with rescued symbols
-                lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + lineToBeCleaned[positions[1]:]
-            else:
-                lineToBeReturned = lineToBeCleaned
-        if "0000" in lineToBeReturned:
-            i = 0
-            for i in range(len(lineToBeReturned) - 4):
+		for line_nr in range(len(self.contents)):
+			found = 0  # example:
+			# F 4 "C3216-100n-50V" H 8450 6050 60  0001 C CNN "InternalName"
+			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', self.contents[line_nr])
 
-                if lineToBeReturned[i:i + 4] == "0000":
-                    break
+			if searchResult:
+				fieldNr = searchResult.group(1)  # not used in this code
+				fieldValue = searchResult.group(2)
+				fieldName = searchResult.group(3)
 
-            lineToBeReturned = lineToBeReturned[:i] + "0001" + lineToBeReturned[i + 4 - len(lineToBeReturned):]
-        # print(lineToBeReturned)
-        return lineToBeReturned
+				for anyField in self.fieldList:
+					for Alias in anyField.Aliases:
 
-    def generatePropertyLine(self, property_nr):
-        cleanLine = self.getCleanLine(self.contents[self.lastContentLine])
-        self.lastFieldLineNr += 1
-        propertyString = cleanLine[:2] + str(self.lastFieldLineNr) + cleanLine[3:5] + \
+						if Alias == fieldName:
+							if fieldFound[anyField] == True:
+								print("Warning: duplicate definition of Field " + fieldName + " with Alias " + Alias
+									  + " for Component " + self.getReference())
+							fieldFound[anyField] = True
+							self.propertyList.append(
+								[anyField.name, fieldValue, self.contents[line_nr], line_nr])  # convert to tuple
+		#end for(all lines)
+
+		# set default values for non-found fields:
+		for anyField in self.fieldList:
+			if fieldFound[anyField] == False:
+				self.propertyList.append([anyField.name, "", "", 0])
+
+	def findLastFieldLine(self):
+		line_counter = 0
+		for line_nr in range(len(self.contents)):
+			if self.contents[line_nr][:2] == "F ":
+				line_counter = line_nr
+				break
+		for line_nr in range(line_counter, len(self.contents)):
+			if not self.contents[line_nr][:2] == "F ":
+				self.lastContentLine = line_nr - 1
+				self.lastFieldLineNr = int(self.contents[line_nr - 1][2])
+				break
+
+	def getCleanLine(self, lineToBeCleaned):
+		# function to create a clean string to generate new entries
+		positions = []
+		for r in range(len(lineToBeCleaned)):
+			if lineToBeCleaned[r] == "\"":
+				positions.append(r)
+		if (len(positions) > 2):
+			# this line has been contaminated
+			lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + \
+							   lineToBeCleaned[positions[1]:positions[2] + 1] + \
+							   lineToBeCleaned[positions[3]:]
+		else:
+			# this line was clean or there was a tilde sign in there
+			if "\"~\"" in lineToBeCleaned:
+				# tilde is found in in kicad schematics with rescued symbols
+				lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + lineToBeCleaned[positions[1]:]
+			else:
+				lineToBeReturned = lineToBeCleaned
+		if "0000" in lineToBeReturned:
+			i = 0
+			for i in range(len(lineToBeReturned) - 4):
+
+				if lineToBeReturned[i:i + 4] == "0000":
+					break
+
+			lineToBeReturned = lineToBeReturned[:i] + "0001" + lineToBeReturned[i + 4 - len(lineToBeReturned):]
+		# print(lineToBeReturned)
+		return lineToBeReturned
+
+	def generatePropertyLine(self, property_nr):
+		cleanLine = self.getCleanLine(self.contents[self.lastContentLine])
+		self.lastFieldLineNr += 1
+		propertyString = cleanLine[:2] + str(self.lastFieldLineNr) + cleanLine[3:5] + \
 						 self.propertyList[property_nr][1] + cleanLine[5:-1] + \
 						 " \"" + self.propertyList[property_nr][0] + "\"" + "\n"
 
-        if "CNN \"\"" in propertyString :
-            a = 5
+		if "CNN \"\"" in propertyString :
+			a = 5
 
-        return propertyString
+		return propertyString
 
-    def addNewInfo(self, csvPropertyList):
-        for csvProperty in csvPropertyList:
-            for schProperty in self.propertyList:
-                if csvProperty[0].name == schProperty[0]:  # matching property names
-                    if not (schProperty[1] == csvProperty[1]):
-                        schProperty[1] = csvProperty[1]  # copy CSV property data to SCH property
-                        positions = []
-                        for r in range(len(schProperty[2])):
-                            if schProperty[2][r] == "\"":
-                                positions.append(r)
-                        if not schProperty[3] == 0:  # if existing fieldname line nr of field != 0
-                            schProperty[2] = schProperty[2][:positions[0] + 1] + schProperty[1] + schProperty[2][
-                                                                                                  positions[1]:]
-                        else:
-                            schProperty[2] = schProperty[1]
-                            schProperty[3] = 0  # 0 IS FLAG FOR NEW FIELDNAME
+	def addNewInfo(self, csvPropertyList):
+		for csvProperty in csvPropertyList:
+			for schProperty in self.propertyList:
+				if csvProperty[0].name == schProperty[0]:  # matching property names
+					if not (schProperty[1] == csvProperty[1]):
+						schProperty[1] = csvProperty[1]  # copy CSV property data to SCH property
+						positions = []
+						for r in range(len(schProperty[2])):
+							if schProperty[2][r] == "\"":
+								positions.append(r)
+						if not schProperty[3] == 0:  # if existing fieldname line nr of field != 0
+							schProperty[2] = schProperty[2][:positions[0] + 1] + schProperty[1] + schProperty[2][
+																								  positions[1]:]
+						else:
+							schProperty[2] = schProperty[1]
+							schProperty[3] = 0  # 0 IS FLAG FOR NEW FIELDNAME
 
 
 
