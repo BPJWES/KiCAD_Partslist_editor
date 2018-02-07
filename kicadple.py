@@ -112,17 +112,29 @@ class Schematic:
 				lastComponent.fieldList = self.fieldList
 
 				while not "$EndComp" in content[count]:
-					if "#" == content[count][0]:  # skip any comment lines
-						count += 1
-						break
-
 					if content[count][0] == "L":
-							i = 0
-							for i in range(len(content[count])):
-								if content[count][len(content[count])-(i+1)] == " ":
-									lastComponent.setReference(content[count][-(i):-1])
-									lastComponent.setName(content[count][2:-(i + 1)])
-									break
+						# Example for a resistor with component=R and ref=R609
+						# L R R609
+						searchResult = re.search('L +(.*) +(.*)', content[count])
+
+						if searchResult:
+							componentName = searchResult.group(1)
+							componentRef = searchResult.group(2)
+
+							lastComponent.setReference(componentRef)
+							lastComponent.setName(componentName)
+
+							print("Trace: Found Component: "
+									+ componentName + " " + componentRef)
+
+							# Special case for power-components: don't parse them
+							if componentRef[0] == "#":
+								lastComponent.unlisted = True
+								break
+
+						else:
+							print("Error: Regex Missmatch for L-record in line: " +
+								  content[count] + " in file " + self.schematicName)
 
 					# Example:
 					# AR Path="/56647084/5664BC85" Ref="U501"  Part="2"
@@ -219,24 +231,28 @@ class Schematic:
 			f.write(line + "\n")
 
 			for item in range(self.get_number_of_components()):
-				line = ""
-				#Add Line with component and fields
-				line += (self.getComponents()[item].getReference())
-				line += (self.delimiter)
-				line += (self.getComponents()[item].getName())
-				line += (self.delimiter)
-				for field in self.fieldList:
-				#match fields to component.field
-					for counter in range(len(self.getComponents()[item].propertyList)):
-						if self.getComponents()[item].propertyList[counter][0] == field.name:
-							line += (self.getComponents()[item].propertyList[counter][1])
-							line += (self.delimiter)
-							break
-						else:
-							line += ("")
+				# skip export of unlisted components
+				if(self.getComponents()[item].unlisted == False):
+					line = ""
+					#Add Line with component and fields
+					line += (self.getComponents()[item].getReference())
+					line += (self.delimiter)
+					line += (self.getComponents()[item].getName())
+					line += (self.delimiter)
+					for field in self.fieldList:
+					#match fields to component.field
+						for counter in range(len(self.getComponents()[item].propertyList)):
+							if self.getComponents()[item].propertyList[counter][0] == field.name:
+								line += (self.getComponents()[item].propertyList[counter][1])
+								line += (self.delimiter)
+								break
+							else:
+								line += ("")
 
-				line += (self.getComponents()[item].GetSchematicName())
-				f.write(line + "\n")
+					line += (self.getComponents()[item].GetSchematicName())
+					f.write(line + "\n")
+				#endif
+			#endfor
 			f.close
 
 	def getSubCircuitName(self):
@@ -315,6 +331,8 @@ class Schematic:
 # The Component Class
 # contains all the lines of a Schematic file, which belong to one component.
 # it provides two main methods:
+#   * extractProperties()
+#   * generatePropertyLine()
 #
 
 class Component:
@@ -327,10 +345,11 @@ class Component:
 		self.value = ""
 		# refactor the field extraction
 		self.propertyList = []
-		self.contents = ""
+		self.contents = "" # contains all the lines, including $Comp to $EndComp
 		self.fieldList = [];
 		self.lastContentLine = 0
 		self.lastFieldLineNr = 0
+		self.unlisted = False # used for power components, e.g. GND #PWR123; they get not exported to CSV
 
 	def setStartPos(self, x):
 		self.startPosition = x
@@ -383,6 +402,11 @@ class Component:
 		return self.endPosition
 
 	def extractProperties(self):
+
+		# skip propery extraction for unlisted components
+		if self.unlisted == True:
+			return
+
 		# parse the contents of a component for Fields
 		self.findLastFieldLine()
 
