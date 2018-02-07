@@ -104,76 +104,20 @@ class Schematic:
 		for count in range(len(content)):
 			if "$Comp" in content[count]:
 
-				self.components.append(Component())
-				self.set_number_of_components(self.get_number_of_components() + 1)
-				lastComponent = self.getLastComponent()
-				lastComponent.setStartPos(count)
-				lastComponent.setSchematicName(self.getSchematicName())
-				lastComponent.fieldList = self.fieldList
+				newComponent = Component()
+				self.components.append(newComponent)
+				self.nrOfComponents += 1
+				newComponent.setStartPos(count)
+				newComponent.setSchematicName(self.getSchematicName())
+				newComponent.fieldList = self.fieldList
 
 				while not "$EndComp" in content[count]:
-					if content[count][0] == "L":
-						# Example for a resistor with component=R and ref=R609
-						# L R R609
-						searchResult = re.search('L +(.*) +(.*)', content[count])
-
-						if searchResult:
-							componentName = searchResult.group(1)
-							componentRef = searchResult.group(2)
-
-							lastComponent.setReference(componentRef)
-							lastComponent.setName(componentName)
-
-							print("Trace: Found Component: "
-									+ componentName + " " + componentRef)
-
-							# Special case for power-components: don't parse them
-							if componentRef[0] == "#":
-								lastComponent.unlisted = True
-								break
-
-						else:
-							print("Error: Regex Missmatch for L-record in line: " +
-								  content[count] + " in file " + self.schematicName)
-
-					# Example:
-					# AR Path="/56647084/5664BC85" Ref="U501"  Part="2"
-					# the number for Part= varies e.g. from 1 to 4 for a component with 4 Units (e.g. LM324)
-					# NOTE; it is not clear, for what reason we get this record only for some components...
-					# we print just a message
-					# we don't use the data any further
-					if "AR Path=" in content[count] :
-						# extract the path, Ref and Part into regex groups:
-						searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', content[count])
-
-						if searchResult:
-							componentPath = searchResult.group(1)
-							componentRef = searchResult.group(2)
-							componentUnit = searchResult.group(3)
-
-							# Print some messages
-							print('Info: AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
-
-
-
-					# Example:
-					# F 1 "LTC2052IS#PBF" H 9750 5550 50  0000 C CNN
-					if "F 1 " in content[count] : #find f1 indicating value field in EEschema file format
-						searchResult = re.search('F 1 +"(.*)".*', content[count])
-
-						if searchResult:
-							componentValue = searchResult.group(1)
-							lastComponent.setValue(componentValue)
-						else:
-							print("Error: Regex Mismatch, cannot find value in 'F 1' field in line: " + content[count])
-					#end if
-
 					count += 1
 				# end while(not end of component found)
 
-				lastComponent.setEndPos(count)
-				lastComponent.contents = content[lastComponent.startPosition:count]
-				lastComponent.extractProperties()
+				newComponent.setEndPos(count)
+				newComponent.contents = content[newComponent.startPosition:count] # copy raw lines into component
+				newComponent.extractProperties()
 			# end if(start of component)
 		# end for(all lines)
 
@@ -337,17 +281,28 @@ class Schematic:
 
 class Component:
 	def __init__(self):
-		self.startPosition = 0
-		self.endPosition = 0
-		self.schematicName = ""
-		self.name = ""
-		self.reference = ""
-		self.value = ""
+
+		# line number within the whole schematic file, set on extraction from schematic:
+		self.startPosition = 0 # $Comp
+		self.endPosition = 0 # $EndComp
+
+		self.schematicName = "" # relative file name (*.sch)
+		self.name = "" # component name in the symbol library eg R
+		self.reference = "" # reference of the component, defined by the annotation eg R501
+		self.value = "" # value field e.g. 47k
+		self.footprint = "" # footprint field e.g. standardSMD:R1608 TODO 0
+		self.datasheet = "" # the last special field TODO 0
 		# refactor the field extraction
+
+		# list of 4-tuples: String kicadField.name, String fieldValue, String lineContent, int relative lineNr]
 		self.propertyList = []
-		self.contents = "" # contains all the lines, including $Comp to $EndComp
-		self.fieldList = [];
-		self.lastContentLine = 0
+		self.contents = "" # contains all the lines, including $Comp and $EndComp
+
+		self.fieldList = []; # list of KicadField objects.
+			# user defined fields with fieldName and aliases, defined by the FieldKeywords.conf
+
+		# relative line number within this component lines; 0 = $Comp
+		self.lastContentLine = 0 #
 		self.lastFieldLineNr = 0
 		self.unlisted = False # used for power components, e.g. GND #PWR123; they get not exported to CSV
 
@@ -401,30 +356,133 @@ class Component:
 	def getEndLine(self):
 		return self.endPosition
 
+
+	# parse the contents of a component for Fields
 	def extractProperties(self):
 
-		# skip propery extraction for unlisted components
-		if self.unlisted == True:
-			return
+	# Example Component Instance:
+	#
+	# $Comp
+	# L R R51
+	# U 1 1 5873950B
+	# P 5750 2000
+	# F 0 "R51" H 5820 2046 50  0000 L CNN
+	# F 1 "3k9" H 5820 1955 50  0000 L CNN
+	# F 2 "standardSMD:R0603" V 5680 2000 50  0001 C CNN
+	# F 3 "" H 5750 2000 50  0000 C CNN
+	# F 4 "R1608-3k9" H 5750 2000 60  0001 C CNN "InternalName"
+	# 	1    5750 2000
+	# 	1    0    0    -1
+	# $EndComp
 
-		# parse the contents of a component for Fields
 		self.findLastFieldLine()
 
-		# temporary dictionay, if we have all fields found
+	# temporary dictionay, if we have all fields found
 		fieldFound={}
 		for anyField in self.fieldList:
 			fieldFound[anyField] = False
 
 		for line_nr in range(len(self.contents)):
-			found = 0  # example:
+			line  = self.contents[line_nr]
+
+			if line[0] == "L":
+				# Example for a resistor with component=R and ref=R609
+				# L R R609
+				searchResult = re.search('L +(.*) +(.*)', line)
+
+				if searchResult:
+					componentName = searchResult.group(1)
+					componentRef = searchResult.group(2)
+
+					self.reference = componentRef
+					self.name = componentName
+
+					print("Trace: Found Component: "
+						  + componentName + " " + componentRef)
+
+					# Special case for power-components: don't parse them
+					if componentRef[0] == "#":
+						self.unlisted = True
+
+					continue
+
+				else:
+					print("Error: Regex Missmatch for L-record in line: " +
+						  line + " in file " + self.schematicName)
+				# endelse
+			# endif L
+
+			# Example:
+			# AR Path="/56647084/5664BC85" Ref="U501"  Part="2"
+			# the number for Part= varies e.g. from 1 to 4 for a component with 4 Units (e.g. LM324)
+			# NOTE; it is not clear, for what reason we get this record only for some components...
+			# we print just a message
+			# we don't use the data any further
+			if "AR Path=" in line:
+				# extract the path, Ref and Part into regex groups:
+				searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', content[count])
+
+				if searchResult:
+					componentPath = searchResult.group(1)
+					componentRef = searchResult.group(2)
+					componentUnit = searchResult.group(3)
+
+					# Print some messages
+					print('Info: AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
+
+
+			# Example
+			# F 0 "R51" H 5820 2046 50  0000 L CNN
+			if line[0:4] == "F 0 ":
+				searchResult = re.search('F 0 +"(.*)" +.*', line)
+
+				if searchResult:
+					componentRef = searchResult.group(1)
+
+					if not (componentRef == self.reference):
+						print("Warning: L record value doesn't match 'F 0 ' record: "
+							  + self.reference + " vs. " + componentRef + " in '" +
+						  line + "' in file " + self.schematicName)
+
+					continue
+				else:
+					print("Error: Regex Missmatch for 'F 0 '-record in line: " +
+						  line + " in file " + self.schematicName)
+				# endelse
+			# endif F 0
+
+
+
+
+			# Example:
+			# F 1 "LTC2052IS#PBF" H 9750 5550 50  0000 C CNN
+			if "F 1 " in line:  # find f1 indicating value field in EEschema file format
+				searchResult = re.search('F 1 +"(.*)".*', line)
+
+				if searchResult:
+					componentValue = searchResult.group(1)
+					self.value = componentValue
+				else:
+					print("Error: Regex Mismatch, cannot find value in 'F 1 '-record in '" +
+						  line + "' in file " + self.schematicName)
+				# end if
+			# endif F 1
+
+			# TODO 0: footprint!
+
+			# TODO 0: datasheet
+
+
+			# example:
 			# F 4 "C3216-100n-50V" H 8450 6050 60  0001 C CNN "InternalName"
-			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', self.contents[line_nr])
+			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
 
 			if searchResult:
 				fieldNr = searchResult.group(1)  # not used in this code
 				fieldValue = searchResult.group(2)
 				fieldName = searchResult.group(3)
 
+				tempFound = False
 				for anyField in self.fieldList:
 					for Alias in anyField.Aliases:
 						if Alias == fieldName:
@@ -433,19 +491,23 @@ class Component:
 									  + " for Component " + self.getReference()
 									  + " in file " + self.schematicName)
 							fieldFound[anyField] = True
+							tempFound = True
 							self.propertyList.append(
-								[anyField.name, fieldValue, self.contents[line_nr], line_nr])  # convert to tuple
+								[anyField.name, fieldValue, line, line_nr])  # convert to tuple
 							break
+					if tempFound == True:
+						break
+
 		#end for(all lines)
 
 		# set default values for non-found fields:
 		for anyField in self.fieldList:
 			if fieldFound[anyField] == False:
-				self.propertyList.append([anyField.name, "", "", 0])
+				self.propertyList.append([anyField.name, "", "", 0]) # add tuple to list
 
 	def findLastFieldLine(self):
 		line_counter = 0
-		# find firt field line:
+		# find first field line (F 0 ):
 		for line_nr in range(len(self.contents)):
 			if self.contents[line_nr][:2] == "F ":
 				line_counter = line_nr
@@ -460,7 +522,7 @@ class Component:
 				if searchResult:
 					fieldNr = searchResult.group(1)
 
-				# self.lastFieldLineNr = int(self.contents[line_nr - 1][2]) # <<= here is the BUG! braks for numbers with more than 1 digit!
+				# self.lastFieldLineNr = int(self.contents[line_nr - 1][2]) # <<= here is the BUG! breaks for numbers with more than 1 digit!
 					self.lastFieldLineNr = fieldNr
 					break
 				else:

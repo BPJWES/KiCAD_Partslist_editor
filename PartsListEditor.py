@@ -24,7 +24,7 @@ def read_settings():
 	except IOError:
 		print("Error: can\'t find file or read data")
 	configfile = f.readlines()
-	if "KiCAD PLE Config file v1.0" in configfile[0]:
+	if "KiCAD PLE Config file v1.1" in configfile[0]:
 		
 		for line in range(1, len(configfile)-1):
 			initPos =1
