@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b51f18c6-94fc-4bc0-914d-9274e0d1bc49" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.csv" afterPath="$PROJECT_DIR$/.csv" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PartsListEditor.py" afterPath="$PROJECT_DIR$/PartsListEditor.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/kicadple.py" afterPath="$PROJECT_DIR$/kicadple.py" />
     </list>
     <ignored path="KiCAD_Partslist_editor.iws" />
@@ -24,11 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="PartsListEditor.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="PartsListEditor.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PartsListEditor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="284">
-              <caret line="156" column="36" selection-start-line="156" selection-start-column="36" selection-end-line="156" selection-end-column="36" />
+            <state relative-caret-position="403">
+              <caret line="149" column="0" selection-start-line="149" selection-start-column="0" selection-end-line="149" selection-end-column="0" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -36,11 +37,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="kicadple.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="kicadple.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/kicadple.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="267">
-              <caret line="280" column="0" selection-start-line="280" selection-start-column="0" selection-end-line="280" selection-end-column="0" />
+            <state relative-caret-position="155">
+              <caret line="769" column="28" selection-start-line="769" selection-start-column="28" selection-end-line="769" selection-end-column="28" />
               <folding>
                 <element signature="e#2#18#0" expanded="true" />
               </folding>
@@ -78,8 +79,8 @@
         <option value="$PROJECT_DIR$/kicadfield.py" />
         <option value="$USER_HOME$/git/viewMorphing/python/viewMorphing.py" />
         <option value="$PROJECT_DIR$/todo_list.txt" />
-        <option value="$PROJECT_DIR$/PartsListEditor.py" />
         <option value="$PROJECT_DIR$/kicadple.py" />
+        <option value="$PROJECT_DIR$/PartsListEditor.py" />
       </list>
     </option>
   </component>
@@ -447,7 +448,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/kicadple.py</url>
-          <line>605</line>
+          <line>479</line>
           <option name="timeStamp" value="81" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
@@ -707,16 +708,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PartsListEditor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="156" column="36" selection-start-line="156" selection-start-column="36" selection-end-line="156" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#21#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python3.5/tkinter/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="281">
@@ -735,10 +726,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/kicadple.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="267">
-          <caret line="280" column="0" selection-start-line="280" selection-start-column="0" selection-end-line="280" selection-end-column="0" />
+        <state relative-caret-position="155">
+          <caret line="769" column="28" selection-start-line="769" selection-start-column="28" selection-end-line="769" selection-end-column="28" />
           <folding>
             <element signature="e#2#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PartsListEditor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="149" column="0" selection-start-line="149" selection-start-column="0" selection-end-line="149" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#21#0" expanded="true" />
           </folding>
         </state>
       </provider>

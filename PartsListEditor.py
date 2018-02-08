@@ -134,7 +134,7 @@ def load_schematic():
 	root.initialDirectory = set_initial_directory(filename)
 
 	if mainSchematicFile.getSchematicName():
-		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.getSchematicName() + "\n" + str(mainSchematicFile.nrOfComponents) + " components were found"
+		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.getSchematicName() + "\n" + str(len(mainSchematicFile.components)) + " components were found"
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 

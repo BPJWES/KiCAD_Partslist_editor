@@ -13,12 +13,11 @@ import re
 class Schematic:
 	def __init__(self):
 		self.contents = "" # list of all text lines in the schematic
-		self.nrOfComponents = 0
 		self.namesOfSubcircuits = [] # List of relative file names (e.g. 'mysubfile.sch')
-		self.components = []
-		self.subcircuits = []
-		self.schematicName = ""
-		self.path = ""
+		self.components = [] # List of Components objects, holding their content and extracted properties/fields
+		self.subcircuits = [] # List of Schematic objects
+		self.schematicName = "" # file name
+		self.path = "" # file system path to this schematic file
 		self.fieldList = "" # list of KicadField objects
 		self.delimiter = ";" # TODO 1: make this configurable
 
@@ -41,12 +40,6 @@ class Schematic:
 	def SwapComponents(self, i, j):
 		self.components[i] , self.components[j] = self.components[j] , self.components[i]
 
-	def set_number_of_components(self, x):
-		self.nrOfComponents = x
-
-	def get_number_of_components(self):
-		return self.nrOfComponents
-
 	def getComponents(self):
 		return self.components
 
@@ -61,7 +54,7 @@ class Schematic:
 		self.components.append(component)
 
 	def printprops(self):
-		print(self.nrOfComponents)
+		print(len(self.components))
 		print(self.components)
 		print(self.namesOfSubcircuits)
 		print(len(self.namesOfSubcircuits))
@@ -103,7 +96,6 @@ class Schematic:
 
 				newComponent = Component()
 				self.components.append(newComponent)
-				self.nrOfComponents += 1 # TODO 2: use len(components) instead of an extra variable!
 				newComponent.setStartPos(count)
 				newComponent.setSchematicName(self.getSchematicName())
 				newComponent.fieldList = self.fieldList
@@ -150,7 +142,6 @@ class Schematic:
 	def AppendComponents(self, componentList):
 		for item in range(len(componentList)):
 			self.components.append(componentList[item])
-			self.nrOfComponents = self.get_number_of_components() + 1
 
 	def exportCsvFile(self, savepath):
 	#New variant which allows for user configurable field names
@@ -271,7 +262,6 @@ class Schematic:
 		for i in range (len(self.components)):
 			del self.components[0]
 		self.contents = ""
-		self.nrOfComponents = 0
 		self.namesOfSubcircuits = []
 		self.components = []
 		self.subcircuits = []
@@ -710,7 +700,6 @@ class CsvFile(object):
 	def __init__(self):
 			self.contents = []
 			self.components = []
-			self.nrOfComponents = 0
 			self.startPosition = 0
 			self.endPosition = 0
 			self.schematicName = ""
@@ -729,11 +718,11 @@ class CsvFile(object):
 		print(self.contents[line])
 
 	def printComponents(self):
-		for i in range (self.nrOfComponents):
+		for i in range (len(self.components)):
 			print(self.components[i].getFarnellLink())
 
 	def getNumberOfComponents(self):
-			return self.nrOfComponents
+			return len(self.components)
 
 	def getComponents(self):
 			return self.components
@@ -760,7 +749,6 @@ class CsvFile(object):
 				newCsvComponent = CsvComponent()
 				newCsvComponent.Contents = self.contents[i]
 				self.components.append(newCsvComponent)
-				self.nrOfComponents = self.nrOfComponents + 1 # TODO 2: remove length variable of list
 				counter = 0
 				positionLast = 0
 				for p in range(len(self.contents[i])):
@@ -780,7 +768,6 @@ class CsvFile(object):
 			del self.components[0]
 		self.contents = []
 		self.components = []
-		self.nrOfComponents = 0
 		self.startPosition = 0
 		self.endPosition = 0
 		self.FarnellLink = ""
