@@ -14,8 +14,7 @@ class Schematic:
 	def __init__(self):
 		self.contents = "" # list of all text lines in the schematic
 		self.nrOfComponents = 0
-		self.namesOfSubcircuits = []
-		self.nrOfSubcircuits = 0
+		self.namesOfSubcircuits = [] # List of relative file names (e.g. 'mysubfile.sch')
 		self.components = []
 		self.subcircuits = []
 		self.schematicName = ""
@@ -60,13 +59,12 @@ class Schematic:
 
 	def appendComponent(self,component):
 		self.components.append(component)
-		self.numb_of_comps = self.numb_of_comps + 1
 
 	def printprops(self):
 		print(self.nrOfComponents)
 		print(self.components)
 		print(self.namesOfSubcircuits)
-		print(self.nrOfSubcircuits)
+		print(len(self.namesOfSubcircuits))
 		print(self.schematicName)
 
 	def parseSubCircuits(self):
@@ -93,7 +91,6 @@ class Schematic:
 		#endfor all lines
 
 		self.namesOfSubcircuits = ListOfSubSchematics
-		self.nrOfSubcircuits = len(ListOfSubSchematics) # TODO 2: remove redundant counter
 
 	def ParseComponents(self):
 		if self.namesOfSubcircuits == []:
@@ -276,15 +273,10 @@ class Schematic:
 		self.contents = ""
 		self.nrOfComponents = 0
 		self.namesOfSubcircuits = []
-		self.nrOfSubcircuits = 0
 		self.components = []
 		self.subcircuits = []
 		self.schematicName = ""
 		self.path = ""
-
-
-
-
 
 
 # The Component Class
