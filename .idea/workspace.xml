@@ -4,6 +4,7 @@
     <list default="true" id="b51f18c6-94fc-4bc0-914d-9274e0d1bc49" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PartsListEditor.py" afterPath="$PROJECT_DIR$/PartsListEditor.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.ini" afterPath="$PROJECT_DIR$/config.ini" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/kicadple.py" afterPath="$PROJECT_DIR$/kicadple.py" />
     </list>
     <ignored path="KiCAD_Partslist_editor.iws" />
@@ -28,8 +29,8 @@
       <file leaf-file-name="PartsListEditor.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PartsListEditor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="222">
-              <caret line="230" column="55" selection-start-line="230" selection-start-column="55" selection-end-line="230" selection-end-column="55" />
+            <state relative-caret-position="461">
+              <caret line="138" column="55" selection-start-line="138" selection-start-column="55" selection-end-line="138" selection-end-column="55" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -40,8 +41,8 @@
       <file leaf-file-name="kicadple.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/kicadple.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="163">
-              <caret line="172" column="12" selection-start-line="172" selection-start-column="12" selection-end-line="172" selection-end-column="12" />
+            <state relative-caret-position="165">
+              <caret line="456" column="78" selection-start-line="456" selection-start-column="78" selection-end-line="456" selection-end-column="78" />
               <folding>
                 <element signature="e#2#18#0" expanded="true" />
               </folding>
@@ -396,10 +397,10 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3290461" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21402214" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3279743" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21033211" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3275862" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37823275" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37823275" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -448,13 +449,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/kicadple.py</url>
-          <line>479</line>
+          <line>501</line>
           <option name="timeStamp" value="81" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/PartsListEditor.py</url>
-          <line>129</line>
+          <line>125</line>
           <option name="timeStamp" value="82" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/PartsListEditor.py</url>
+          <line>276</line>
+          <option name="timeStamp" value="120" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -467,7 +473,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="120" />
+      <option name="time" value="123" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -475,6 +481,7 @@
         <watch expression="count" />
         <watch expression="content[count+subcounter]" />
         <watch expression="ListOfSubSchematics" />
+        <watch expression="csvFile" />
       </configuration>
     </watches-manager>
   </component>
@@ -726,8 +733,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PartsListEditor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="222">
-          <caret line="230" column="55" selection-start-line="230" selection-start-column="55" selection-end-line="230" selection-end-column="55" />
+        <state relative-caret-position="461">
+          <caret line="138" column="55" selection-start-line="138" selection-start-column="55" selection-end-line="138" selection-end-column="55" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
           </folding>
@@ -736,8 +743,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/kicadple.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="172" column="12" selection-start-line="172" selection-start-column="12" selection-end-line="172" selection-end-column="12" />
+        <state relative-caret-position="165">
+          <caret line="456" column="78" selection-start-line="456" selection-start-column="78" selection-end-line="456" selection-end-column="78" />
           <folding>
             <element signature="e#2#18#0" expanded="true" />
           </folding>

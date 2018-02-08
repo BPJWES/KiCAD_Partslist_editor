@@ -103,12 +103,8 @@ def load_schematic():
 				for i  in range(len(filename)): # get the last part of the file path
 
 					if "/" in filename[len(filename)-1-i]:
-						mainSchematicFile.setSchematicName(filename[len(filename) - i:])
+						mainSchematicFile.schematicName = filename[len(filename) - i:]
 						break
-					#if "\" in filename[len(filename)-1-i]: UNIX PATH SUPPORT ??
-					#	mainFile.setSchematicName(filename[len(filename)-i:])
-					#	print(mainFile.getSchematicName())
-					#	break
 				f.close()
 				if mainSchematicFile.ParseComponents():
 					if(len(mainSchematicFile.getSubCircuits()) != len(mainSchematicFile.getSubCircuitName())):
@@ -133,8 +129,16 @@ def load_schematic():
 		#mainFile.getComponents()[i].generateProperties()
 	root.initialDirectory = set_initial_directory(filename)
 
-	if mainSchematicFile.getSchematicName():
-		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.getSchematicName() + "\n" + str(len(mainSchematicFile.components)) + " components were found"
+	if mainSchematicFile.schematicName:
+		unlistedCount = 0
+		for c in mainSchematicFile.components:
+			if c.unlisted:
+				unlistedCount += 1
+
+
+		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.schematicName + "\n" +\
+							  str(len(mainSchematicFile.components) - unlistedCount ) +\
+							  " + " + str(unlistedCount) + " hidden components were found"
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 
@@ -143,7 +147,7 @@ def load_schematic():
 def set_initial_directory(filename):
 	for i  in range(len(filename)): # get the last part of the file path
 				if "/" in filename[len(filename)-1-i]:
-					mainSchematicFile.setSchematicName(filename[len(filename) - i:])
+					mainSchematicFile.schematicName = filename[len(filename) - i:]
 					return filename[:len(filename)-i-1]
 					break
 
@@ -255,33 +259,26 @@ def load_csv():
 		except IOError:
 			messagebox.showerror("File IO Error", "Cannot open CSV File " + filename)
 		else:
-			#dataTestDump = f.readlines()[0]
 			f.close()
 
-		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or \
-                        "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in dataTestDump:
-			#this is a bug waiting to happen and not compatible with the FieldKeywords.conf 
-			#verify it conforms to KiCAD Partslist-editor specs
-			if csvFile.getComponents():
-				csvFile.deleteContents()
 
-			f = open(filename)
+		if csvFile.getComponents():
+			csvFile.deleteContents()
 
-			csvFile.setContents(f.readlines())
+		f = open(filename)
 
-			if csvFile.extractCsvComponents():
-				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
-			else:
-				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(csvFile.getNumberOfComponents()) + " components were imported"
+		csvFile.setContents(f.readlines())
 
-			f.close()
-
+		if csvFile.extractCsvComponents():
+			messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 		else:
-			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
+			statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(len(csvFile.components)) + " components were imported"
+
+		f.close()
 
 	else:
 		if filename:
-			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
+			messagebox.showerror("FileParseError", "This is not a valid CSV document (*.csv or *.CSV)")
 
 	
 def build_new_schematic():

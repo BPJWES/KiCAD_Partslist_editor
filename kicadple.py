@@ -27,12 +27,6 @@ class Schematic:
 	def getPath(self):
 		return self.path
 
-	def setSchematicName(self, x):
-		self.schematicName = x
-
-	def getSchematicName(self):
-		return self.schematicName
-
 	def SetContents(self,content):
 		#load the contents of the .sch file
 		self.contents = content
@@ -97,7 +91,7 @@ class Schematic:
 				newComponent = Component()
 				self.components.append(newComponent)
 				newComponent.setStartPos(count)
-				newComponent.setSchematicName(self.getSchematicName())
+				newComponent.schematicName = self.schematicName
 				newComponent.fieldList = self.fieldList
 
 				while not "$EndComp" in content[count]:
@@ -130,11 +124,13 @@ class Schematic:
 				self.get_subcircuit(subcircuitCounter).setPath(to_open)
 				self.subcircuits[subcircuitCounter].contents=f.readlines()
 				f.close()
-				self.get_subcircuit(subcircuitCounter).setSchematicName(self.namesOfSubcircuits[subcircuitCounter])
+				self.get_subcircuit(subcircuitCounter).schematicName = self.namesOfSubcircuits[subcircuitCounter]
 				self.get_subcircuit(subcircuitCounter).fieldList = self.fieldList
 				self.get_subcircuit(subcircuitCounter).ParseComponents()
 				self.AppendComponents(self.get_subcircuit(subcircuitCounter).getComponents())
+		# end for(all subcircuits)
 
+		# TODO 2: check for consistent components with multiple units
 
 	def get_subcircuit(self, x):
 		return self.subcircuits[x]
@@ -154,19 +150,21 @@ class Schematic:
 				return "error"
 		else:
 			line = ""
-			line += ("Reference")
+			line += "Part"
 			line += self.delimiter
-			line += ("Part")
-			line += (self.delimiter)
-			line += ("Value")
-			line += (self.delimiter)
-			line += ("Footprint")
-			line += (self.delimiter)
-			line += ("Datasheet")
-			line += (self.delimiter)
+			line += "Reference" # here we use the referenceUnique!!!
+			line += self.delimiter
+			line += "Unit"
+			line += self.delimiter
+			line += "Value"
+			line += self.delimiter
+			line += "Footprint"
+			line += self.delimiter
+			line += "Datasheet"
+			line += self.delimiter
 			for field in self.fieldList:
-				line += (field.name)
-				line += (self.delimiter)
+				line += field.name
+				line += self.delimiter
 			line += ("File")
 			f.write(line + "\n")
 
@@ -174,29 +172,32 @@ class Schematic:
 				# skip export of unlisted components
 				if(self.components[item].unlisted == False):
 					line = ""
+					# TODO 2: add quotation marks for each entry (use csv library)
 					#Add Line with component and fields
-					line += (self.components[item].reference)
-					line += (self.delimiter)
-					line += (self.components[item].name)
-					line += (self.delimiter)
-					line += (self.components[item].value)
-					line += (self.delimiter)
-					line += (self.components[item].footprint)
-					line += (self.delimiter)
-					line += (self.components[item].datasheet)
-					line += (self.delimiter)
+					line += self.components[item].name
+					line += self.delimiter
+					line += self.components[item].reference
+					line += self.delimiter
+					line += self.components[item].unit
+					line += self.delimiter
+					line += self.components[item].value
+					line += self.delimiter
+					line += self.components[item].footprint
+					line += self.delimiter
+					line += self.components[item].datasheet
+					line += self.delimiter
 
 					for field in self.fieldList:
 					#match fields to component.field
 						for counter in range(len(self.getComponents()[item].propertyList)):
 							if self.getComponents()[item].propertyList[counter][0] == field.name:
-								line += (self.getComponents()[item].propertyList[counter][1])
-								line += (self.delimiter)
+								line += self.getComponents()[item].propertyList[counter][1]
+								line += self.delimiter
 								break
 							else:
-								line += ("")
+								line += ""
 
-					line += (self.getComponents()[item].GetSchematicName())
+					line += self.getComponents()[item].schematicName
 					f.write(line + "\n")
 				#endif
 			#endfor
@@ -212,12 +213,12 @@ class Schematic:
 		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		# should be fixed now but am not sure
 
-		print("Number of Parts in CSV: " + str(csvFile.getNumberOfComponents()))
+		print("Number of Parts in CSV: " + str(len(csvFile.components)))
 		print("Number of Parts in this SCH: " + str(len(self.components)))
 
-		if csvFile.getNumberOfComponents() and len(self.components):
+		if len(csvFile.components) and len(self.components):
 
-			for i in range (csvFile.getNumberOfComponents()):#Loop over csv_components
+			for i in range (len(csvFile.components)):#Loop over csv_components
 				for p in range (len(self.components)):#loop over .sch components
 					if csvFile.getComponents()[i].getReference() == self.getComponents()[p].getReference() and \
 									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
@@ -285,7 +286,11 @@ class Component:
 
 		self.schematicName = "" # relative file name (*.sch)
 		self.name = "" # component name in the symbol library eg R
-		self.reference = "" # reference of the component, defined by the annotation eg R501
+		self.unit = 0 # integer number used for components with multiple units (eg. quad opamp) TODO 1: implement unit
+		self.reference = "" # (common) reference of the component, defined by the annotation eg R501
+			# for multiple instances (in subsheets) we have to use the uniqueReference
+		self.referenceUnique = ""  # unique reference of the component, defined by the annotation eg R501
+			# this holds the true reference name. Different for multiple instances in sub-sheets.
 		self.value = "" # value field e.g. 47k
 		self.footprint = "" # footprint field e.g. standardSMD:R1608
 		self.datasheet = "" # the last special field
@@ -341,12 +346,6 @@ class Component:
 		print(self.value)
 		print(self.schematicName)
 
-	def setSchematicName(self, schematic_name):
-		self.schematicName = schematic_name
-
-	def GetSchematicName(self):
-		return self.schematicName
-
 	def getStartLine(self):
 		return self.startPosition
 
@@ -381,9 +380,10 @@ class Component:
 		for line_nr in range(len(self.contents)):
 			line  = self.contents[line_nr]
 
+			# Example for a resistor with component=R and ref=R609
+			# L R R609
+			# the reference here is a common reference, if it is used in multiple instances of a subsheet
 			if line[0] == "L":
-				# Example for a resistor with component=R and ref=R609
-				# L R R609
 				searchResult = re.search('L +(.*) +(.*)', line)
 
 				if searchResult:
@@ -399,6 +399,7 @@ class Component:
 					# Special case for power-components: don't parse them
 					if componentRef[0] == "#":
 						self.unlisted = True
+						return # no further parsing for unlisted components
 
 					continue
 
@@ -408,6 +409,24 @@ class Component:
 				# endelse
 			# endif L
 
+
+			# Unit: Example
+			# U 1 1 5873950B
+			if line[0:2] == "U ":
+				searchResult = re.search('U +(\d*) +(\d+) +([0-9A-Fa-f]+) *', line)
+
+				if searchResult:
+					componentUnit = searchResult.group(1)
+					componentMm = searchResult.group(2) # could not find a proper meaning of this value other than 'mm'
+					componentTimestamp = searchResult.group(3) # unused here
+					self.unit = componentUnit
+					continue
+				else:
+					print("Error: Regex Missmatch for 'U '-record in line: " +
+						  line + " in file " + self.schematicName)
+				# end else
+			# endif U
+
 			# Example:
 			# AR Path="/56647084/5664BC85" Ref="U501"  Part="2"
 			# the number for Part= varies e.g. from 1 to 4 for a component with 4 Units (e.g. LM324)
@@ -416,7 +435,7 @@ class Component:
 			# we don't use the data any further
 			if "AR Path=" in line:
 				# extract the path, Ref and Part into regex groups:
-				searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', content[count])
+				searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', line)
 
 				if searchResult:
 					componentPath = searchResult.group(1)
@@ -426,7 +445,6 @@ class Component:
 					# Print some messages
 					print('Info: AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
 
-
 			# Example
 			# F 0 "R51" H 5820 2046 50  0000 L CNN
 			if line[0:4] == "F 0 ":
@@ -435,11 +453,15 @@ class Component:
 				if searchResult:
 					componentRef = searchResult.group(1)
 
+					# TODO 1: handle proper reference name for multiple instances
+					# we get the unique references only from the AR-records!!!
+
+					#self.referenceUnique = componentRef
+
 					if not (componentRef == self.reference):
-						print("Warning: L record value doesn't match 'F 0 ' record: "
+						print("Info: L record value doesn't match 'F 0 ' record: "
 							  + self.reference + " vs. " + componentRef + " in '" +
 						  line + "' in file " + self.schematicName)
-
 					continue
 				else:
 					print("Error: Regex Missmatch for 'F 0 '-record in line: " +
@@ -700,12 +722,6 @@ class CsvFile(object):
 	def __init__(self):
 			self.contents = []
 			self.components = []
-			self.startPosition = 0
-			self.endPosition = 0
-			self.schematicName = ""
-			self.name = ""
-			self.reference = ""
-			self.value = ""
 			self.fieldList = []
 
 	def setContents(self, to_be_inserted):
@@ -720,9 +736,6 @@ class CsvFile(object):
 	def printComponents(self):
 		for i in range (len(self.components)):
 			print(self.components[i].getFarnellLink())
-
-	def getNumberOfComponents(self):
-			return len(self.components)
 
 	def getComponents(self):
 			return self.components
@@ -768,13 +781,6 @@ class CsvFile(object):
 			del self.components[0]
 		self.contents = []
 		self.components = []
-		self.startPosition = 0
-		self.endPosition = 0
-		self.FarnellLink = ""
-		self.schematicName = ""
-		self.name = ""
-		self.reference = ""
-		self.value = ""
 		#break
 
 
