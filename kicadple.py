@@ -74,26 +74,26 @@ class Schematic:
 		ListOfSubSchematics = []
 		for count in range(len(content)):
 			if "$Sheet" in content[count]:
-				for subcounter in range(10):
-					# TODO 1: this is very bad style of parsing the lines. Fix this!
-					# it leads to an "out of range" if $EndSheet comes before count+subcounter
-					if count+subcounter < len(content) and "F1 " in content[count+subcounter]: # added a quick-fix to the problem described above!
-						#print(content[count+subcounter])
-						test_var = 0
-						endOfString = 0
-						for p in range(len(content[count+subcounter])):
-							if content[count+subcounter][p] == "\"":
-								if test_var == 0:
-									startOfString = p+1
-									test_var = 1
-									#print(p)
-								else:
-									endOfString = p
-									break
-						if startOfString != 0:
-							ListOfSubSchematics.append(content[count+subcounter][startOfString:endOfString])
+				count += 1
+
+				while not "$EndSheet" in content[count]:
+					# Example:
+					# F1 "ADC-16-Bit.sch" 60
+					if content[count][0:3] == "F1 ":
+						searchResult = re.search('F1 +"(.*)" +.*', content[count])
+						if searchResult:
+							ListOfSubSchematics.append(searchResult.group(1))
+							break
+						else:
+							print("Error: cannot find schematic name in F1-record within $Sheet-block "+
+								  "in file " + self.schematicName + " in line number " + count)
+					count += 1
+				#endwhile
+			#endif $Sheet
+		#endfor all lines
+
 		self.namesOfSubcircuits = ListOfSubSchematics
-		self.nrOfSubcircuits = len(ListOfSubSchematics)
+		self.nrOfSubcircuits = len(ListOfSubSchematics) # TODO 2: remove redundant counter
 
 	def ParseComponents(self):
 		if self.namesOfSubcircuits == []:
@@ -215,7 +215,7 @@ class Schematic:
 			f.close
 
 	def getSubCircuitName(self):
-		return self.subcircuits_names
+		return self.namesOfSubcircuits
 
 	def getSubCircuits(self):
 		return self.subcircuits
