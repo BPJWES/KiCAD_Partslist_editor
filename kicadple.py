@@ -170,7 +170,7 @@ class Schematic:
 			line += ("File")
 			f.write(line + "\n")
 
-			for item in range(self.get_number_of_components()):
+			for item in range(len(self.components)):
 				# skip export of unlisted components
 				if(self.components[item].unlisted == False):
 					line = ""
@@ -213,12 +213,12 @@ class Schematic:
 		# should be fixed now but am not sure
 
 		print("Number of Parts in CSV: " + str(csvFile.getNumberOfComponents()))
-		print("Number of Parts in this SCH: " + str(self.get_number_of_components()))
+		print("Number of Parts in this SCH: " + str(len(self.components)))
 
-		if csvFile.getNumberOfComponents() and self.get_number_of_components():
+		if csvFile.getNumberOfComponents() and len(self.components):
 
 			for i in range (csvFile.getNumberOfComponents()):#Loop over csv_components
-				for p in range (self.get_number_of_components()):#loop over .sch components
+				for p in range (len(self.components)):#loop over .sch components
 					if csvFile.getComponents()[i].getReference() == self.getComponents()[p].getReference() and \
 									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
@@ -287,8 +287,8 @@ class Component:
 		self.name = "" # component name in the symbol library eg R
 		self.reference = "" # reference of the component, defined by the annotation eg R501
 		self.value = "" # value field e.g. 47k
-		self.footprint = "" # footprint field e.g. standardSMD:R1608 TODO 0
-		self.datasheet = "" # the last special field TODO 0
+		self.footprint = "" # footprint field e.g. standardSMD:R1608
+		self.datasheet = "" # the last special field
 		# refactor the field extraction
 
 		# list of 4-tuples: String kicadField.name, String fieldValue, String lineContent, int relative lineNr]

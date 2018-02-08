@@ -150,7 +150,7 @@ def set_initial_directory(filename):
 
 def generate_csv():
 	initialDirectory = root.initialDirectory
-	if mainSchematicFile.get_number_of_components() > 0:
+	if len(mainSchematicFile.components) > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
 		root.initialDirectory = initialDirectory = set_initial_directory(root.path_to_save)
 		sort_parts()
@@ -166,9 +166,9 @@ def my_break():
 	root.quit()
 
 def list_parts():
-	if mainSchematicFile.get_number_of_components() != 0:
+	if len(mainSchematicFile.components) != 0:
 		sub  = Tk()
-		height = mainSchematicFile.get_number_of_components()
+		height = len(mainSchematicFile.components)
 
 		for i in range(height): #Rows
 				b = Entry(sub, text="")
@@ -227,13 +227,12 @@ def sort_list(this_list):
 	return sortedList
 
 def sort_parts():
-	mainSchematicFile.get_number_of_components()
 	componentNameList = []
-	for i in range (mainSchematicFile.get_number_of_components()):
+	for i in range (len(mainSchematicFile.components)):
 		componentNameList.append(mainSchematicFile.getComponents()[i].getReference())
 	sort_list(componentNameList)
-	for i in range (mainSchematicFile.get_number_of_components()):
-		for p in range(i, mainSchematicFile.get_number_of_components()):
+	for i in range (len(mainSchematicFile.components)):
+		for p in range(i, len(mainSchematicFile.components)):
 			if componentNameList[i] == mainSchematicFile.getComponents()[p].getReference():
 				mainSchematicFile.SwapComponents(i, p)
 
