@@ -106,7 +106,7 @@ class Schematic:
 
 				newComponent = Component()
 				self.components.append(newComponent)
-				self.nrOfComponents += 1
+				self.nrOfComponents += 1 # TODO 2: use len(components) instead of an extra variable!
 				newComponent.setStartPos(count)
 				newComponent.setSchematicName(self.getSchematicName())
 				newComponent.fieldList = self.fieldList
@@ -116,7 +116,9 @@ class Schematic:
 				# end while(not end of component found)
 
 				newComponent.setEndPos(count)
-				newComponent.contents = content[newComponent.startPosition:count] # copy raw lines into component
+
+				# copy raw lines into component including $Comp and $EndComp
+				newComponent.contents = content[newComponent.startPosition:count+1]
 				newComponent.extractProperties()
 			# end if(start of component)
 		# end for(all lines)
@@ -164,25 +166,38 @@ class Schematic:
 				return "error"
 		else:
 			line = ""
-			line += "Part\#"
+			line += ("Reference")
 			line += self.delimiter
-			line += ("PartType")
+			line += ("Part")
+			line += (self.delimiter)
+			line += ("Value")
+			line += (self.delimiter)
+			line += ("Footprint")
+			line += (self.delimiter)
+			line += ("Datasheet")
 			line += (self.delimiter)
 			for field in self.fieldList:
 				line += (field.name)
 				line += (self.delimiter)
-			line += ("Found in: ")
+			line += ("File")
 			f.write(line + "\n")
 
 			for item in range(self.get_number_of_components()):
 				# skip export of unlisted components
-				if(self.getComponents()[item].unlisted == False):
+				if(self.components[item].unlisted == False):
 					line = ""
 					#Add Line with component and fields
-					line += (self.getComponents()[item].getReference())
+					line += (self.components[item].reference)
 					line += (self.delimiter)
-					line += (self.getComponents()[item].getName())
+					line += (self.components[item].name)
 					line += (self.delimiter)
+					line += (self.components[item].value)
+					line += (self.delimiter)
+					line += (self.components[item].footprint)
+					line += (self.delimiter)
+					line += (self.components[item].datasheet)
+					line += (self.delimiter)
+
 					for field in self.fieldList:
 					#match fields to component.field
 						for counter in range(len(self.getComponents()[item].propertyList)):
@@ -358,8 +373,6 @@ class Component:
 
 
 	# parse the contents of a component for Fields
-	def extractProperties(self):
-
 	# Example Component Instance:
 	#
 	# $Comp
@@ -374,6 +387,7 @@ class Component:
 	# 	1    5750 2000
 	# 	1    0    0    -1
 	# $EndComp
+	def extractProperties(self):
 
 		self.findLastFieldLine()
 
@@ -454,7 +468,7 @@ class Component:
 
 
 
-			# Example:
+			# Value, Example:
 			# F 1 "LTC2052IS#PBF" H 9750 5550 50  0000 C CNN
 			if "F 1 " in line:  # find f1 indicating value field in EEschema file format
 				searchResult = re.search('F 1 +"(.*)".*', line)
@@ -462,18 +476,45 @@ class Component:
 				if searchResult:
 					componentValue = searchResult.group(1)
 					self.value = componentValue
+					continue
 				else:
 					print("Error: Regex Mismatch, cannot find value in 'F 1 '-record in '" +
 						  line + "' in file " + self.schematicName)
 				# end if
 			# endif F 1
 
-			# TODO 0: footprint!
+			# Footprint, Example:
+			# F 2 "standardSMD:R0603" V 5680 2000 50  0001 C CNN
+			if "F 2 " in line:  # find f1 indicating value field in EEschema file format
+				searchResult = re.search('F 2 +"(.*)".*', line)
 
-			# TODO 0: datasheet
+				if searchResult:
+					componentFootprint = searchResult.group(1)
+					self.footprint = componentFootprint
+					continue
+				else:
+					print("Error: Regex Mismatch, cannot find value in 'F 2 '-record (footprint) in '" +
+						  line + "' in file " + self.schematicName)
+				# end if
+				# endif F 2
 
+			#
+			# Datasheet; Example:
+			# F 3 "" H 5750 2000 50  0000 C CNN
+			if "F 3 " in line:  # find f1 indicating value field in EEschema file format
+				searchResult = re.search('F 3 +"(.*)".*', line)
 
-			# example:
+				if searchResult:
+					componentDatasheet = searchResult.group(1)
+					self.datasheet = componentDatasheet
+					continue
+				else:
+					print("Error: Regex Mismatch, cannot find value in 'F 3 '-record (datasheet) in '" +
+						  line + "' in file " + self.schematicName)
+				# end if
+				# endif F 3
+
+			# Custom Fields, Example:
 			# F 4 "C3216-100n-50V" H 8450 6050 60  0001 C CNN "InternalName"
 			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
 
@@ -497,13 +538,17 @@ class Component:
 							break
 					if tempFound == True:
 						break
-
+				if tempFound == True:
+					continue
+			#endif Regex
 		#end for(all lines)
 
 		# set default values for non-found fields:
 		for anyField in self.fieldList:
 			if fieldFound[anyField] == False:
 				self.propertyList.append([anyField.name, "", "", 0]) # add tuple to list
+
+		print("") # just a breakpoint anchor
 
 	def findLastFieldLine(self):
 		line_counter = 0
@@ -723,7 +768,7 @@ class CsvFile(object):
 				newCsvComponent = CsvComponent()
 				newCsvComponent.Contents = self.contents[i]
 				self.components.append(newCsvComponent)
-				self.nrOfComponents = self.nrOfComponents + 1
+				self.nrOfComponents = self.nrOfComponents + 1 # TODO 2: remove length variable of list
 				counter = 0
 				positionLast = 0
 				for p in range(len(self.contents[i])):

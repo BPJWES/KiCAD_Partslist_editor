@@ -121,7 +121,8 @@ def load_schematic():
 
 	else:
 		if filename:
-			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document (*.sch or *.SCH)")
+
 
 	for i in range (len(mainSchematicFile.getComponents())):
 		if "?" in mainSchematicFile.getComponents()[i].getReference():
