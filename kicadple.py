@@ -228,7 +228,7 @@ class Schematic:
 					if csvFile.getComponents()[i].reference == self.getComponents()[p].getReference() and \
 									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
-						selectedComponent = self.getComponents()[p]
+						selectedComponent = self.components[p]
 						selectedComponent.addNewInfo(csvFile.components[i].propertyList)
 
 						for property in range(len(selectedComponent.propertyList)):
@@ -592,8 +592,8 @@ class Component:
 		if (len(positions) > 2):
 			# this line has been contaminated
 			lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + \
-							   lineToBeCleaned[positions[1]:positions[2] + 1] + \
-							   lineToBeCleaned[positions[3]:]
+							   lineToBeCleaned[positions[1]:positions[2]] + \
+							   lineToBeCleaned[positions[3]+1:]
 		else:
 			# this line was clean or there was a tilde sign in there
 			if "\"~\"" in lineToBeCleaned:
@@ -614,15 +614,33 @@ class Component:
 
 	def generatePropertyLine(self, property_nr):
 		cleanLine = self.getCleanLine(self.contents[self.lastContentLine])
+
+		# NOTE: here was a major bug: the concattenation broke for field-numbers >= 10 (!!!)
+
+		searchResult = re.search('F (\d+) ".*"( [HV] [0-9 A-Z]*).*', cleanLine)
+
+		if searchResult:
+			if searchResult.group(1):
+				fieldNumber = searchResult.group(1)
+				if(fieldNumber != self.lastFieldLineNr):
+					print("Sanity Error: wrong field number in " + self.schematicName + ": " + self.contents[self.lastContentLine])
+			else:
+				print("Error: Regex missmatch: cannot find field number")
+
+			if searchResult.group(2):
+				fieldProperties = searchResult.group(2)
+			else:
+				print("Error: Regex missmatch: cannot find field properties")
+
 		self.lastFieldLineNr += 1
-		propertyString = cleanLine[:2] + str(self.lastFieldLineNr) + cleanLine[3:5] + \
-						 self.propertyList[property_nr][1] + cleanLine[5:-1] + \
-						 " \"" + self.propertyList[property_nr][0] + "\"" + "\n"
 
-		if "CNN \"\"" in propertyString :
-			a = 5
+		fieldValue = self.propertyList[property_nr][1]
+		fieldName = self.propertyList[property_nr][0]
 
-		return propertyString
+		newFieldLine = 'F ' + str(self.lastFieldLineNr) + ' "' + fieldValue + '" ' + \
+			   fieldProperties + ' "' + fieldName + '" \n'
+
+		return newFieldLine
 
 	def addNewInfo(self, csvPropertyList):
 		for csvProperty in csvPropertyList:
