@@ -13,8 +13,6 @@ make suggested filenames
 autogenerate filename for KiCAD_PLE_BOM.csv
 
 ## Notes by Karl
-* fix bug with missing footprint and value fields in the CSV export
-* add unit-counter to component
 * add warnings, if footprint and/or value for one components is different between the units
 
 * see other TODOs marked in the code with TODO <N> with N from 0 = very important to 5 = would be nice if implemented
