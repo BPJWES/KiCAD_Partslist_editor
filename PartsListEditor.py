@@ -1,4 +1,3 @@
-import SCH_TO_CSV_OOP_LIB
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -7,26 +6,29 @@ from configparser import ConfigParser
 import os
 
 
-mainFile = SCH_TO_CSV_OOP_LIB.SCH_FILE()
-openCSVFile = SCH_TO_CSV_OOP_LIB.CSV_FILE()
+import kicadple
+import globals
+
+mainSchematicFile = kicadple.Schematic()
+csvFile = kicadple.CsvFile()
 initialDirectory = "" 
-FieldsConfigFile = "FieldKeywords.conf"
-Fieldlist = [];
+fieldsConfigFile = "FieldKeywords.conf"
+fieldList = [];
 
 
-def ReadSettings():
+def read_settings():
 	
 	try:
-		f = open(FieldsConfigFile)
+		f = open(fieldsConfigFile)
 		
 	except IOError:
 		print("Error: can\'t find file or read data")
 	configfile = f.readlines()
-	if "KiCAD PLE Config file v1.0" in configfile[0]:
+	if "KiCAD PLE Config file v1.1" in configfile[0]:
 		
 		for line in range(1, len(configfile)-1):
 			initPos =1
-			newField = SCH_TO_CSV_OOP_LIB.KiCAD_Field()
+			newField = kicadple.KicadField()
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
 				
@@ -42,14 +44,16 @@ def ReadSettings():
 					
 				newField.appendAlias(configfile[line][initPos+1:-2])
 				
-			global Fieldlist
-			Fieldlist.append(newField)
+			global fieldList
+			fieldList.append(newField)
 			
 		
 	else:
 		print("incorrect config file")
 
-def OpenFile():
+def load_schematic():
+	globals.ParsedSchematicFiles = [] # clear this list.
+
 	config = ConfigParser()
 	config.read('config.ini')
     
@@ -59,7 +63,7 @@ def OpenFile():
 	else:
 		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	filename = root.filename
-	root.SCHFILELAST = filename
+	root.lastSchematicFileName = filename
 
 
 	config.read('config.ini')
@@ -77,35 +81,35 @@ def OpenFile():
 		except IOError:
 			print("Error: can\'t find file or read data")
 		else:
-			mainFile.setPath(filename)
-			data_test_dump = f.readlines()[0]
+			mainSchematicFile.setPath(filename)
+			dataTestDump = f.readlines()[0]
 			f.close()
 
-		if data_test_dump[:-1] == "EESchema Schematic File Version 2":
+		if dataTestDump[:-1] == "EESchema Schematic File Version 2":
+			# TODO 2: move the laoding of a schematic file into the Schematic class!
+			# --> make use of recursive loading of schematics
+
 			#verify it conforms to KiCAD specs
-			if mainFile.getComponents():
-				mainFile.deleteContents()
+			if mainSchematicFile.getComponents():
+				mainSchematicFile.deleteContents()
 			try:
 				f = open(filename)
 			except IOError:
 				print("Error: can\'t find file or read data")
 			else:
-				mainFile.SetContents(f.readlines())
-				mainFile.fieldList = Fieldlist;
+				mainSchematicFile.SetContents(f.readlines())
+				mainSchematicFile.fieldList = fieldList;
 				#print(FieldList)
 
+                # TODO 2: use os library for filename extraction
 				for i  in range(len(filename)): # get the last part of the file path
 
 					if "/" in filename[len(filename)-1-i]:
-						mainFile.setSchematicName(filename[len(filename)-i:])
+						mainSchematicFile.schematicName = filename[len(filename) - i:]
 						break
-					#if "\" in filename[len(filename)-1-i]: UNIX PATH SUPPORT ??
-					#	mainFile.setSchematicName(filename[len(filename)-i:])
-					#	print(mainFile.getSchematicName())
-					#	break
 				f.close()
-				if mainFile.ParseComponents():
-					if(len(mainFile.getSubCircuits()) != len(mainFile.getSubCircuitName())):
+				if mainSchematicFile.ParseComponents():
+					if(len(mainSchematicFile.getSubCircuits()) != len(mainSchematicFile.getSubCircuitName())):
 						messagebox.showerror("FileParseError", "Hierarchical schematics could not be found")
 					else:
 						messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
@@ -115,59 +119,71 @@ def OpenFile():
 
 	else:
 		if filename:
-			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document.")
+			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document (*.sch or *.SCH)")
 
-	for i in range (len(mainFile.getComponents())):
-		if "?" in mainFile.getComponents()[i].GetAnnotation():
-			if messagebox.askyesno("Annotation Incomplete", "The program is unable to process unanotated components. Do you want to clear imported data?"):
-				mainFile.deleteContents()
+
+	for i in range (len(mainSchematicFile.getComponents())):
+		if "?" in mainSchematicFile.getComponents()[i].getReference():
+			if messagebox.askyesno("Annotation Incomplete",
+                    "The program is unable to process unanotated components. Do you want to clear imported data?"):
+				mainSchematicFile.deleteContents()
 			break
 		#mainFile.getComponents()[i].generateProperties()
-	root.initialDirectory = setInitialDirectory(filename)
+	root.initialDirectory = set_initial_directory(filename)
 
-	if mainFile.getSchematicName():
-		statusLabel['text'] = "Loaded schematic: " + mainFile.getSchematicName() + "\n" + str(mainFile.numb_of_comps) + " components were found"
+	if mainSchematicFile.schematicName:
+		unlistedCount = 0
+		for c in mainSchematicFile.components:
+			if c.unlisted:
+				unlistedCount += 1
+
+
+		statusLabel['text'] = "Loaded schematic: " + mainSchematicFile.schematicName + "\n" +\
+							  str(len(mainSchematicFile.components) - unlistedCount ) +\
+							  " + " + str(unlistedCount) + " hidden components were found"
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 
 	
 	
-def setInitialDirectory(filename):
+def set_initial_directory(filename):
 	for i  in range(len(filename)): # get the last part of the file path
 				if "/" in filename[len(filename)-1-i]:
-					mainFile.setSchematicName(filename[len(filename)-i:])
+					mainSchematicFile.schematicName = filename[len(filename) - i:]
 					return filename[:len(filename)-i-1]
 					break
-def GenerateCSV():
+
+
+def generate_csv():
 	initialDirectory = root.initialDirectory
-	if mainFile.get_number_of_components() > 0:
+	if len(mainSchematicFile.components) > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
-		root.initialDirectory = initialDirectory = setInitialDirectory(root.path_to_save)
-		sortParts()
-		if mainFile.SaveBOMInCSV(root.path_to_save):
+		root.initialDirectory = initialDirectory = set_initial_directory(root.path_to_save)
+		sort_parts()
+		if mainSchematicFile.exportCsvFile(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
 		else:
 			statusLabel['text'] = "Saved: " + str(root.path_to_save)
 	else:
 		messagebox.showerror("Cannot generate .CSV", "No SCH File loaded")
-def Break():
+
+
+def my_break():
 	root.quit()
 
-def listParts():
-	#print("test") this somehow get executed
-	#print("hoi")
-	if mainFile.get_number_of_components() != 0:
+def list_parts():
+	if len(mainSchematicFile.components) != 0:
 		sub  = Tk()
-		height = mainFile.get_number_of_components()
+		height = len(mainSchematicFile.components)
 
 		for i in range(height): #Rows
 				b = Entry(sub, text="")
 				b.grid(row=i, column=1)
-				b.insert(0,mainFile.getComponents()[i].GetAnnotation())
+				b.insert(0, mainSchematicFile.getComponents()[i].getReference())
 
 				c = Entry(sub, text="")
 				c.grid(row=i, column=2)
-				c.insert(0,mainFile.getComponents()[i].GetName())
+				c.insert(0, mainSchematicFile.getComponents()[i].getName())
 
 				d = Entry(sub, text="")
 				d.grid(row=i, column=3)
@@ -196,7 +212,7 @@ def checklower(lowest_known, to_compare):
 				return 1
 	return 0
 
-def sortList(this_list):
+def sort_list(this_list):
 	sortedList = []
 	lowest_known = "zzzzzzz"
 	position = 0
@@ -212,24 +228,24 @@ def sortList(this_list):
 		this_list[i] , this_list[position] = this_list[position] , this_list[i]
 		lowest_known = "zzzzzzz"
 
-	sortList = this_list
+	sortedList = this_list
 
 	return sortedList
 
-def sortParts():
-	mainFile.get_number_of_components()
+def sort_parts():
 	componentNameList = []
-	for i in range (mainFile.get_number_of_components()):
-		componentNameList.append(mainFile.getComponents()[i].GetAnnotation())
-	sortList(componentNameList)
-	for i in range (mainFile.get_number_of_components()):
-		for p in range(i, mainFile.get_number_of_components()):
-			if componentNameList[i] == mainFile.getComponents()[p].GetAnnotation():
-				mainFile.SwapComponents(i,p)
+	for i in range (len(mainSchematicFile.components)):
+		componentNameList.append(mainSchematicFile.getComponents()[i].getReference())
+	sort_list(componentNameList)
+	for i in range (len(mainSchematicFile.components)):
+		for p in range(i, len(mainSchematicFile.components)):
+			if componentNameList[i] == mainSchematicFile.getComponents()[p].getReference():
+				mainSchematicFile.SwapComponents(i, p)
 
-def loadCSV():
+
+def load_csv():
 	initialDirectory = root.initialDirectory
-	mainFile.printprops()
+	mainSchematicFile.printprops()
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
 	else:
@@ -243,62 +259,56 @@ def loadCSV():
 		try:
 			f = open(filename)
 		except IOError:
-			messagebox.showerror("File IO Error", ".SCH cannot be edited")
+			messagebox.showerror("File IO Error", "Cannot open CSV File " + filename)
 		else:
-			#data_test_dump = f.readlines()[0]
 			f.close()
 
-		if "Part\#,PartType,FarnellLink,MouserLink,DigiKeyLink" or "Part\#;PartType;FarnellLink;MouserLink;DigiKeyLink" in data_test_dump:
-			#this is a bug waiting to happen and not compatible with the FieldKeywords.conf 
-			#verify it conforms to KiCAD Partslist-editor specs
-			if openCSVFile.getComponents():
-				openCSVFile.deleteContents()
 
-			f = open(filename)
+		if csvFile.getComponents():
+			csvFile.deleteContents()
 
-			openCSVFile.setContents(f.readlines())
+		f = open(filename)
 
-			if openCSVFile.generateCSVComponents():
-				messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
-			else:
-				statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(openCSVFile.getNumberOfComponents()) + " components were imported"
+		csvFile.setContents(f.readlines())
 
-			f.close()
-
+		if csvFile.extractCsvComponents():
+			messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
 		else:
-			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
+			statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(len(csvFile.components)) + " components were imported"
+
+		f.close()
 
 	else:
 		if filename:
-			messagebox.showerror("FileParseError", "This is not a valid CSV document.")
+			messagebox.showerror("FileParseError", "This is not a valid CSV document (*.csv or *.CSV)")
 
 	
-def BuildNewSCH():
+def build_new_schematic():
 	initialDirectory = root.initialDirectory
-	if mainFile.getComponents() and openCSVFile.getComponents():
-		print(root.SCHFILELAST)
-		savePath = filedialog.asksaveasfilename(initialfile = root.SCHFILELAST, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
+	if mainSchematicFile.getComponents() and csvFile.getComponents():
+		print(root.lastSchematicFileName)
+		savePath = filedialog.asksaveasfilename(initialfile = root.lastSchematicFileName, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
 		if savePath:
-			if mainFile.ModifyNewSCHFile(0,openCSVFile,savePath):
+			if mainSchematicFile.ModifyNewSCHFile(0, csvFile, savePath):
 				messagebox.showerror("File IO Error", ".SCH cannot be edited")
 			else:
 				statusLabel['text'] = str(savePath) + " updated with new field values"
 	else:
-		if mainFile.getComponents():
+		if mainSchematicFile.getComponents():
 			messagebox.showerror("Processing Error", "No CSV File Loaded")
-		elif openCSVFile.getComponents():
+		elif csvFile.getComponents():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")
 			
 			
-def CleanMemory():
-	mainFile.deleteContents()
-	openCSVFile.deleteContents()
+def clean_memory():
+	mainSchematicFile.deleteContents()
+	csvFile.deleteContents()
 	statusLabel['text'] = "Memory cleared \n All stored components deleted!"
 
-def showAboutDialog():
+def show_about_dialog():
 	messagebox.showinfo("About KiCad Partslist Editor", "Use this tool to comfortably modify many parts fields in your favourite spreadsheet programm (e.g. LibreOffice Calc)\n" +
 						"Written by BPJWES\n" +
 						"https://github.com/BPJWES/KiCAD_Partslist_editor")
@@ -312,34 +322,34 @@ root.bind("<Escape>", lambda e: e.widget.quit())
 background_image = PhotoImage(file="KICAD_PLE.png")
 background = Label(root, image=background_image, bd=0)
 background.grid(row = 0, column = 0, columnspan = 3, rowspan = 1, padx = 5, pady = 5)
-ReadSettings()
+read_settings()
 
 
-b = ttk.Button(root, text="Load Schematic", command=OpenFile)
+b = ttk.Button(root, text="Load Schematic", command=load_schematic)
 b.grid(row = 1, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5, )
 
-g = ttk.Button(root, text="Save Schematic", command=BuildNewSCH)
+g = ttk.Button(root, text="Save Schematic", command=build_new_schematic)
 g.grid(row = 2, column = 0, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 
-c = ttk.Button(root, text="Export CSV", command=GenerateCSV)
+c = ttk.Button(root, text="Export CSV", command=generate_csv)
 c.grid(row = 1, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
-f = ttk.Button(root, text="Import CSV", command=loadCSV)
+f = ttk.Button(root, text="Import CSV", command=load_csv)
 f.grid(row = 2, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 
-d = ttk.Button(root, text="List Parts", command=listParts)
+d = ttk.Button(root, text="List Parts", command=list_parts)
 d.grid(row = 1, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
-e = ttk.Button(root, text="Sort Parts", command=sortParts)
+e = ttk.Button(root, text="Sort Parts", command=sort_parts)
 e.grid(row = 2, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 
-b = ttk.Button(root, text="About", command=showAboutDialog)
+b = ttk.Button(root, text="About", command=show_about_dialog)
 b.grid(row = 3, column = 2, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
-h = ttk.Button(root, text="Clear Component Memory", command=CleanMemory)
+h = ttk.Button(root, text="Clear Component Memory", command=clean_memory)
 h.grid(row = 3, column = 1, columnspan = 1, rowspan = 1, padx = 5, pady = 5)
 
 #i = ttk.Button(root, text="Exit", command=Break)
