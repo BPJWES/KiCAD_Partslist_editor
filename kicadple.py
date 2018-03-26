@@ -19,7 +19,6 @@ class Schematic:
 		self.schematicName = "" # file name
 		self.path = "" # file system path to this schematic file
 		self.fieldList = "" # list of KicadField objects
-		self.delimiter = ";" # TODO 1: make this configurable
 
 	def setPath(self, path):
 		self.path = path
@@ -157,20 +156,20 @@ class Schematic:
 		else:
 			line = ""
 			line += "Part"
-			line += self.delimiter
+			line += globals.CsvSeparator
 			line += "Reference" # here we use the referenceUnique!!!
-			line += self.delimiter
+			line += globals.CsvSeparator
 			line += "Unit"
-			line += self.delimiter
+			line += globals.CsvSeparator
 			line += "Value"
-			line += self.delimiter
+			line += globals.CsvSeparator
 			line += "Footprint"
-			line += self.delimiter
+			line += globals.CsvSeparator
 			line += "Datasheet"
-			line += self.delimiter
+			line += globals.CsvSeparator
 			for field in self.fieldList:
 				line += field.name
-				line += self.delimiter
+				line += globals.CsvSeparator
 			line += ("File")
 			f.write(line + "\n")
 
@@ -181,24 +180,24 @@ class Schematic:
 					# TODO 2: add quotation marks for each entry (use csv library)
 					#Add Line with component and fields
 					line += self.components[item].name
-					line += self.delimiter
+					line += globals.CsvSeparator
 					line += self.components[item].reference
-					line += self.delimiter
+					line += globals.CsvSeparator
 					line += self.components[item].unit
-					line += self.delimiter
+					line += globals.CsvSeparator
 					line += self.components[item].value
-					line += self.delimiter
+					line += globals.CsvSeparator
 					line += self.components[item].footprint
-					line += self.delimiter
+					line += globals.CsvSeparator
 					line += self.components[item].datasheet
-					line += self.delimiter
+					line += globals.CsvSeparator
 
 					for field in self.fieldList:
 					#match fields to component.field
 						for counter in range(len(self.getComponents()[item].propertyList)):
 							if self.getComponents()[item].propertyList[counter][0] == field.name:
 								line += self.getComponents()[item].propertyList[counter][1]
-								line += self.delimiter
+								line += globals.CsvSeparator
 								break
 							else:
 								line += ""
@@ -744,19 +743,17 @@ class CsvFile(object):
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self):
-		# TODO 3: fix this separator handling
-		if "," in self.contents[1]:
-			delimiter = ","
-		elif ";":
-			delimiter = ";"
-		else:
-			return 'error: no delimiter found in CSV'
+		if globals.CsvSeparator not in self.contents[1]:
+			return 'error: no delimiter found in CSV. ' + '"' + globals.CsvSeparator + '" expected. See config.ini'
 
 		# Find the order of the parameters saved in the csv
 		header = self.contents[0]
 		header = header.strip('\n')
 		header = header.strip('\r')
-		columnNames = header.split(delimiter)
+		columnNames = header.split(globals.CsvSeparator)
+
+		if len(columnNames) < 7:
+			return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
 
 		for c in columnNames:
 			new_csv_field = KicadField()
@@ -772,7 +769,7 @@ class CsvFile(object):
 
 			dataLine = dataLine.strip('\n')
 			dataLine = dataLine.strip('\r')
-			values = dataLine.split(delimiter)
+			values = dataLine.split(globals.CsvSeparator)
 
 			column = 0
 			for value in values:

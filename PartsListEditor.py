@@ -58,6 +58,7 @@ def load_schematic():
 	config.read('config.ini')
     
 	initialDirectory = config.get('main', 'lastDirectory', fallback="")
+
 	if initialDirectory == "": 
 		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Schematic Files",".sch"),("All Files", ".*")))
 	else:
@@ -70,6 +71,10 @@ def load_schematic():
 	if config.has_section('main') == FALSE:
 		config.add_section('main')
 	config.set('main', 'lastDirectory', os.path.dirname(filename))
+
+	globals.CsvSeparator = config.get('main', 'csvSeparator', fallback=",")
+	if globals.CsvSeparator is ",":
+		config.set('main', 'csvSeparator', globals.CsvSeparator)
 
 	with open('config.ini', 'w') as f:
 		config.write(f)
@@ -101,12 +106,8 @@ def load_schematic():
 				mainSchematicFile.fieldList = fieldList;
 				#print(FieldList)
 
-                # TODO 2: use os library for filename extraction
-				for i  in range(len(filename)): # get the last part of the file path
+				mainSchematicFile.schematicName = os.path.basename(filename)
 
-					if "/" in filename[len(filename)-1-i]:
-						mainSchematicFile.schematicName = filename[len(filename) - i:]
-						break
 				f.close()
 				if mainSchematicFile.ParseComponents():
 					if(len(mainSchematicFile.getSubCircuits()) != len(mainSchematicFile.getSubCircuitName())):
@@ -147,18 +148,15 @@ def load_schematic():
 	
 	
 def set_initial_directory(filename):
-	for i  in range(len(filename)): # get the last part of the file path
-				if "/" in filename[len(filename)-1-i]:
-					mainSchematicFile.schematicName = filename[len(filename) - i:]
-					return filename[:len(filename)-i-1]
-					break
+	mainSchematicFile.schematicName = os.path.basename(filename)
+	return os.path.dirname(filename)
 
 
 def generate_csv():
 	initialDirectory = root.initialDirectory
 	if len(mainSchematicFile.components) > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
-		root.initialDirectory = initialDirectory = set_initial_directory(root.path_to_save)
+		root.initialDirectory = set_initial_directory(root.path_to_save)
 		sort_parts()
 		if mainSchematicFile.exportCsvFile(root.path_to_save):
 			messagebox.showerror("File IOerror", "The file might still be opened")
@@ -244,16 +242,33 @@ def sort_parts():
 
 
 def load_csv():
-	initialDirectory = root.initialDirectory
+	config = ConfigParser()
+	config.read('config.ini')
+
+	initialDirectory = config.get('main', 'lastDirectory', fallback="")
+
 	mainSchematicFile.printprops()
-	if initialDirectory == "": 
-		root.filename = filedialog.askopenfilename(filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
+	if initialDirectory == "":
+		root.filename = filedialog.askopenfilename(
+			filetypes=(("KiCAD Partslist-editor files", ".csv"), ("All Files", ".*")))
 	else:
-		root.filename = filedialog.askopenfilename(initialdir = initialDirectory, filetypes = (("KiCAD Partslist-editor files",".csv"),("All Files", ".*")))
-	
+		root.filename = filedialog.askopenfilename(initialdir=initialDirectory, filetypes=(
+		("KiCAD Partslist-editor files", ".csv"), ("All Files", ".*")))
+
 	filename = root.filename
-	
-	#root.initialDirectory = setInitialDirectory(filename) this breaks changes mainFile.schematicname
+
+	config.read('config.ini')
+	if config.has_section('main') == FALSE:
+		config.add_section('main')
+	config.set('main', 'lastDirectory', os.path.dirname(filename))
+
+	globals.CsvSeparator = config.get('main', 'csvSeparator', fallback=",")
+	if globals.CsvSeparator is ",":
+		config.set('main', 'csvSeparator', globals.CsvSeparator)
+
+	with open('config.ini', 'w') as f:
+		config.write(f)
+
 	
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
 		try:
@@ -271,8 +286,9 @@ def load_csv():
 
 		csvFile.setContents(f.readlines())
 
-		if csvFile.extractCsvComponents():
-			messagebox.showerror("Incorrect Fileformat", "The file is neither comma separated nor semicolon separated")
+		error = csvFile.extractCsvComponents()
+		if error:
+			messagebox.showerror("Incorrect Fileformat", error)
 		else:
 			statusLabel['text'] = "Import: " + str(root.filename) + " complete" + "\n" +  str(len(csvFile.components)) + " components were imported"
 
