@@ -226,7 +226,7 @@ class Schematic:
 
 			for i in range (len(csvFile.components)):#Loop over csv_components
 				for p in range (len(self.components)):#loop over .sch components
-					if csvFile.getComponents()[i].getReference() == self.getComponents()[p].getReference() and \
+					if csvFile.getComponents()[i].reference == self.getComponents()[p].getReference() and \
 									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
 
 						selectedComponent = self.getComponents()[p]
@@ -578,7 +578,7 @@ class Component:
 					fieldNr = searchResult.group(1)
 
 				# self.lastFieldLineNr = int(self.contents[line_nr - 1][2]) # <<= here is the BUG! breaks for numbers with more than 1 digit!
-					self.lastFieldLineNr = fieldNr
+					self.lastFieldLineNr = int(fieldNr)
 					break
 				else:
 					print("Error: Regex mismatch on extraction of field number in this line: " +
@@ -652,12 +652,14 @@ class Component:
 
 class CsvComponent(object):
 	def __init__(self):
-		self.reference = ""
-		self.value = ""
-		self.name = ""
-		self.schematic = ""
-		self.startLine = ""
-		self.endLine = ""
+		self.part = ""  # component library name, e.g. D_Schottky
+		self.reference = "" # Component reference e.g. R517
+		self.unit = "" # unit
+		self.value = "" # component value, e.g. 4k7
+		self.footprint = ""  # footprint incl. library, e.g. standardSMD:R1608
+		self.datasheet = ""  #
+		self.schematic = ""  # filename of the schematic (sub-) sheet
+
 		# refactor the field extraction
 		self.propertyList = []
 		self.Contents = ""
@@ -671,12 +673,6 @@ class CsvComponent(object):
 
 	def getName(self):
 		return self.name
-
-	def setReference(self, reference):
-		self.reference = reference
-
-	def getReference(self):
-		return self.reference
 
 	def setValue(self,value):
 		self.value = value
@@ -748,39 +744,62 @@ class CsvFile(object):
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self):
-			if "," in self.contents[1]:
-				delimiter = ","
-			elif ";":
-				delimiter = ";"
-			else:
-				return 'error: no delimiter found in CSV'
+		# TODO 3: fix this separator handling
+		if "," in self.contents[1]:
+			delimiter = ","
+		elif ";":
+			delimiter = ";"
+		else:
+			return 'error: no delimiter found in CSV'
 
-			# Find the order of the parameters saved in the csv
-			positionLast = 0
-			for p in range(len(self.contents[0])):
-				if self.contents[0][p] == delimiter:
-					new_csv_field = KicadField()
-					new_csv_field.name = self.contents[0][positionLast:p]
-					self.fieldList.append(new_csv_field)
-					positionLast = p + 1
-			#parse date belonging to component
-			for i in range(1, len(self.contents)):
-				newCsvComponent = CsvComponent()
-				newCsvComponent.Contents = self.contents[i]
-				self.components.append(newCsvComponent)
-				counter = 0
-				positionLast = 0
-				for p in range(len(self.contents[i])):
-					if self.contents[i][p] == delimiter:
-							if counter == 0:
-								self.components[i-1].setReference(self.contents[i][positionLast:p])
-							field_content = self.contents[i][positionLast:p]
-							newCsvComponent.propertyList.append([self.fieldList[counter],field_content])
+		# Find the order of the parameters saved in the csv
+		header = self.contents[0]
+		header = header.strip('\n')
+		header = header.strip('\r')
+		columnNames = header.split(delimiter)
 
-							positionLast = p + 1
-							counter = counter + 1
+		for c in columnNames:
+			new_csv_field = KicadField()
+			new_csv_field.name = c
+			self.fieldList.append(new_csv_field)
+
+		#parse date belonging to component
+		for i in range(1, len(self.contents)):
+			newCsvComponent = CsvComponent()
+
+			dataLine = self.contents[i]
+			newCsvComponent.Contents = self.contents[i]
+
+			dataLine = dataLine.strip('\n')
+			dataLine = dataLine.strip('\r')
+			values = dataLine.split(delimiter)
+
+			column = 0
+			for value in values:
+				# TODO 3: replace these constants with a common definition in globals
+				if columnNames[column] == 'Part':
+					newCsvComponent.part = value
+				elif columnNames[column] == 'Reference':
+					newCsvComponent.reference = value
+				elif columnNames[column] == 'Unit':
+					newCsvComponent.unit = value
+				elif columnNames[column] == 'Value':
+					newCsvComponent.value = value
+				elif columnNames[column] == 'Footprint':
+					newCsvComponent.footprint = value
+				elif columnNames[column] == 'Datasheet':
+					newCsvComponent.datasheet = value
+				elif columnNames[column] == 'File':
+					newCsvComponent.schematic = value
 				else:
-					newCsvComponent.schematic = self.contents[i][positionLast:-1]
+					newCsvComponent.propertyList.append([self.fieldList[column], value])
+
+				column += 1
+			# end for all values in dataLine
+
+			self.components.append(newCsvComponent)
+
+		print("finished component extractions")
 
 	def deleteContents(self):
 		for i in range (len(self.components)):
