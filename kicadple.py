@@ -1,8 +1,8 @@
 
 
-import component
 import os
 import re
+import globals
 
 
 # The Schematic class
@@ -89,7 +89,7 @@ class Schematic:
 			if "$Comp" in content[count]:
 
 				newComponent = Component()
-				self.components.append(newComponent)
+				self.components.append(newComponent) # copy by reference
 				newComponent.setStartPos(count)
 				newComponent.schematicName = self.schematicName
 				newComponent.fieldList = self.fieldList
@@ -107,37 +107,43 @@ class Schematic:
 		# end for(all lines)
 
 		for subcircuitCounter in range(len(self.namesOfSubcircuits)):
-
-
 			#print("subcircuit")
 			#for p in range (len(self.path)):
 			#	if self.path[-p] == "/":
 			#		break
 			#to_open = self.path[:-p+1] + self.subcircuits_names[subcircuitCounter]
-			to_open = os.path.join(os.path.dirname(self.path), self.namesOfSubcircuits[subcircuitCounter])
-			try:
-				f = open(to_open)
-			except IOError:
-				return "error"
+
+			global ParsedSchematicFiles;
+
+			subFilePathName = os.path.join(os.path.dirname(self.path), self.namesOfSubcircuits[subcircuitCounter])
+
+			# Open only files, which have not been parsed already! (Deduplication of parts in the CSV)
+			if subFilePathName not in globals.ParsedSchematicFiles:
+				globals.ParsedSchematicFiles.append(subFilePathName)
+				try:
+					f = open(subFilePathName)
+				except IOError:
+					return "error"
+				else:
+					subSchematic = Schematic()
+					self.subcircuits.append(subSchematic)
+					subSchematic.setPath(subFilePathName)
+					subSchematic.contents=f.readlines()
+					f.close()
+					subSchematic.schematicName = self.namesOfSubcircuits[subcircuitCounter]
+					subSchematic.fieldList = self.fieldList
+					subSchematic.ParseComponents()
+
+					#  TODO 2: fix this bad styple: each schematic should hold it's own components only.
+					# and not all components of all sub and subsubsheets.
+					# see also exportCsvFile()
+					self.components.extend(subSchematic.getComponents())
 			else:
-				self.append_subcircuit(Schematic())
-				self.get_subcircuit(subcircuitCounter).setPath(to_open)
-				self.subcircuits[subcircuitCounter].contents=f.readlines()
-				f.close()
-				self.get_subcircuit(subcircuitCounter).schematicName = self.namesOfSubcircuits[subcircuitCounter]
-				self.get_subcircuit(subcircuitCounter).fieldList = self.fieldList
-				self.get_subcircuit(subcircuitCounter).ParseComponents()
-				self.AppendComponents(self.get_subcircuit(subcircuitCounter).getComponents())
+				print("Trace: skip for deduplication: " + subFilePathName)
+
 		# end for(all subcircuits)
 
 		# TODO 2: check for consistent components with multiple units
-
-	def get_subcircuit(self, x):
-		return self.subcircuits[x]
-
-	def AppendComponents(self, componentList):
-		for item in range(len(componentList)):
-			self.components.append(componentList[item])
 
 	def exportCsvFile(self, savepath):
 	#New variant which allows for user configurable field names

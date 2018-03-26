@@ -7,7 +7,7 @@ import os
 
 
 import kicadple
-
+import globals
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
@@ -52,6 +52,8 @@ def read_settings():
 		print("incorrect config file")
 
 def load_schematic():
+	globals.ParsedSchematicFiles = [] # clear this list.
+
 	config = ConfigParser()
 	config.read('config.ini')
     
