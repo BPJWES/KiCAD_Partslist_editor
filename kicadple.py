@@ -5,6 +5,52 @@ import re
 import globals
 
 
+# This class holds the values for a field line from a KiCad schematic file
+class ComponentField:
+	def __init__(self):
+		self.name = "" # Field Name, at the end of the line within double-quotes
+		self.value = "" # Field Value, at the beginning of the Line after the "F xx " record header
+		self._content = "" # text line for the schematic file, including \n at the end. Use getter and setter!
+		self.number = 0 # fields in KiCad are numbered, where 0,1,2 and 3 are reserved for reference, value, footprint and datasheet
+		self.relativeLine = 0 # relative line within a component, where $COMP is line 0; Zero means, this field
+			# doesn't exist in the schematic
+		self._fieldProperties = "" # is extracted from the content. Starts with 'H' or 'V', and typically ends with 'CNN'.
+
+	# parses the content-line and extracts name, value and number
+	def setContent(self, content):
+		# TODO 0: test
+		searchResult = re.search('F (\d+) "([^"]*)" ([HV] [0-9 A-Z]*[BN])(.*)?', content)
+			# group 1: field number
+			# group 2: field value (without double quotes)
+			# group 3: field properties (without leading or trailing spaces)
+			# group 4: optional field name (with leading/trailing spaces and double quotes)
+
+		if searchResult:
+			self.number = int(searchResult.group(1))
+			self.value = searchResult.group(2)
+			self._fieldProperties = searchResult.group(3)
+			optFieldName = searchResult.group(4) # this is optional for "F 0" to "F 3"
+
+			if len(optFieldName) > 0:
+				searchResult = re.search(' *"([^"]*).*', optFieldName)
+
+				if searchResult:
+					self.name = searchResult.group(1)
+				else:
+					self.name = ""
+
+		else:
+			print("Error: Regex missmatch in ComponentField:setContent(" + content + ")")
+
+
+	# composes the content line from the existing content and the current values of name, value and number
+	def getContent(self):
+		# TODO 0: test
+		s = 'F ' + str(self.number) + ' "' + self.value + '" ' + self._fieldProperties
+		if self.name:
+			s = s + ' "' + self.name + '"'
+		return s
+
 # The Schematic class
 # holds its filename and all the subcircuits.
 # The components in this schematic are also stored here.
@@ -33,11 +79,8 @@ class Schematic:
 	def SwapComponents(self, i, j):
 		self.components[i] , self.components[j] = self.components[j] , self.components[i]
 
-	def getComponents(self):
-		return self.components
-
 	def getLastComponent(self):
-		last_position = len(self.getComponents())-1
+		last_position = len(self.components)-1
 		return self.components[last_position]
 
 	def append_subcircuit(self, subcircuit_instance):
@@ -136,7 +179,7 @@ class Schematic:
 					#  TODO 2: fix this bad styple: each schematic should hold it's own components only.
 					# and not all components of all sub and subsubsheets.
 					# see also exportCsvFile()
-					self.components.extend(subSchematic.getComponents())
+					self.components.extend(subSchematic.components)
 			else:
 				print("Trace: skip for deduplication: " + subFilePathName)
 
@@ -194,15 +237,15 @@ class Schematic:
 
 					for field in self.fieldList:
 					#match fields to component.field
-						for counter in range(len(self.getComponents()[item].propertyList)):
-							if self.getComponents()[item].propertyList[counter][0] == field.name:
-								line += self.getComponents()[item].propertyList[counter][1]
+						for counter in range(len(self.components[item].propertyList)):
+							if self.components[item].propertyList[counter][0] == field.name:
+								line += self.components[item].propertyList[counter][1]
 								line += globals.CsvSeparator
 								break
 							else:
 								line += ""
 
-					line += self.getComponents()[item].schematicName
+					line += self.components[item].schematicName
 					f.write(line + "\n")
 				#endif
 			#endfor
@@ -225,8 +268,8 @@ class Schematic:
 
 			for i in range (len(csvFile.components)):#Loop over csv_components
 				for p in range (len(self.components)):#loop over .sch components
-					if csvFile.getComponents()[i].reference == self.getComponents()[p].getReference() and \
-									self.schematicName ==  csvFile.getComponents()[i].getSchematic(): #if annotation and schematic name match
+					if csvFile.components[i].reference == self.components[p].getReference() and \
+									self.schematicName ==  csvFile.components[i].getSchematic(): #if annotation and schematic name match
 
 						selectedComponent = self.components[p]
 						selectedComponent.addNewInfo(csvFile.components[i].propertyList)
@@ -648,13 +691,16 @@ class Component:
 				if csvProperty[0].name == schProperty[0]:  # matching property names
 					if not (schProperty[1] == csvProperty[1]):
 						schProperty[1] = csvProperty[1]  # copy CSV property data to SCH property
-						positions = []
+						positions = [] # list of index, where double-quotes are in the
+
+						# find all double-quotes (")
 						for r in range(len(schProperty[2])):
 							if schProperty[2][r] == "\"":
 								positions.append(r)
+
 						if not schProperty[3] == 0:  # if existing fieldname line nr of field != 0
-							schProperty[2] = schProperty[2][:positions[0] + 1] + schProperty[1] + schProperty[2][
-																								  positions[1]:]
+							schProperty[2] = schProperty[2][:positions[0] + 1] + schProperty[1] + \
+											 schProperty[2][positions[1]:]
 						else:
 							schProperty[2] = schProperty[1]
 							schProperty[3] = 0  # 0 IS FLAG FOR NEW FIELDNAME
@@ -755,9 +801,6 @@ class CsvFile(object):
 	def printComponents(self):
 		for i in range (len(self.components)):
 			print(self.components[i].getFarnellLink())
-
-	def getComponents(self):
-			return self.components
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self):

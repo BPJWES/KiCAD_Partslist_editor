@@ -95,7 +95,7 @@ def load_schematic():
 			# --> make use of recursive loading of schematics
 
 			#verify it conforms to KiCAD specs
-			if mainSchematicFile.getComponents():
+			if mainSchematicFile.components:
 				mainSchematicFile.deleteContents()
 			try:
 				f = open(filename)
@@ -123,13 +123,13 @@ def load_schematic():
 			messagebox.showerror("FileParseError", "This is not a valid KiCAD schematic document (*.sch or *.SCH)")
 
 
-	for i in range (len(mainSchematicFile.getComponents())):
-		if "?" in mainSchematicFile.getComponents()[i].getReference():
+	for i in range (len(mainSchematicFile.components)):
+		if "?" in mainSchematicFile.components[i].getReference():
 			if messagebox.askyesno("Annotation Incomplete",
                     "The program is unable to process unanotated components. Do you want to clear imported data?"):
 				mainSchematicFile.deleteContents()
 			break
-		#mainFile.getComponents()[i].generateProperties()
+		#mainFile.components[i].generateProperties()
 	root.initialDirectory = set_initial_directory(filename)
 
 	if mainSchematicFile.schematicName:
@@ -177,15 +177,15 @@ def list_parts():
 		for i in range(height): #Rows
 				b = Entry(sub, text="")
 				b.grid(row=i, column=1)
-				b.insert(0, mainSchematicFile.getComponents()[i].getReference())
+				b.insert(0, mainSchematicFile.components[i].getReference())
 
 				c = Entry(sub, text="")
 				c.grid(row=i, column=2)
-				c.insert(0, mainSchematicFile.getComponents()[i].getName())
+				c.insert(0, mainSchematicFile.components[i].getName())
 
 				d = Entry(sub, text="")
 				d.grid(row=i, column=3)
-				#d.insert(0,mainFile.getComponents()[i].GetFarnellLink())
+				#d.insert(0,mainFile.components[i].GetFarnellLink())
 				d.insert(0,"deprecated")
 
 def checklower(lowest_known, to_compare):
@@ -233,11 +233,11 @@ def sort_list(this_list):
 def sort_parts():
 	componentNameList = []
 	for i in range (len(mainSchematicFile.components)):
-		componentNameList.append(mainSchematicFile.getComponents()[i].getReference())
+		componentNameList.append(mainSchematicFile.components[i].getReference())
 	sort_list(componentNameList)
 	for i in range (len(mainSchematicFile.components)):
 		for p in range(i, len(mainSchematicFile.components)):
-			if componentNameList[i] == mainSchematicFile.getComponents()[p].getReference():
+			if componentNameList[i] == mainSchematicFile.components[p].getReference():
 				mainSchematicFile.SwapComponents(i, p)
 
 
@@ -279,7 +279,7 @@ def load_csv():
 			f.close()
 
 
-		if csvFile.getComponents():
+		if csvFile.components:
 			csvFile.deleteContents()
 
 		f = open(filename)
@@ -301,7 +301,7 @@ def load_csv():
 	
 def build_new_schematic():
 	initialDirectory = root.initialDirectory
-	if mainSchematicFile.getComponents() and csvFile.getComponents():
+	if mainSchematicFile.components and csvFile.components:
 		print(root.lastSchematicFileName)
 		savePath = filedialog.asksaveasfilename(initialfile = root.lastSchematicFileName, filetypes = (("KiCAD Schematic File", ".sch"),("All Files",".*")))
 		
@@ -311,9 +311,9 @@ def build_new_schematic():
 			else:
 				statusLabel['text'] = str(savePath) + " updated with new field values"
 	else:
-		if mainSchematicFile.getComponents():
+		if mainSchematicFile.components:
 			messagebox.showerror("Processing Error", "No CSV File Loaded")
-		elif csvFile.getComponents():
+		elif csvFile.components:
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")

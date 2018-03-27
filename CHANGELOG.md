@@ -2,6 +2,9 @@ Changelog for the KiCad Partslist Editor
 ========================================
 
 TODO: update Part, Value, Footprint and Datasheet on Import!
+# current dev
+* add class ComponentField with regex parser using regex101.com
+* replaced getComponents() with .components
 
 # 2018-03-26
 * allways export KiCad's default fields
