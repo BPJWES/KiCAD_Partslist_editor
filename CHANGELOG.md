@@ -1,10 +1,19 @@
 Changelog for the KiCad Partslist Editor
 ========================================
 
-TODO: update Part, Value, Footprint and Datasheet on Import!
+
 # current dev
 * add class ComponentField with regex parser using regex101.com
 * replaced getComponents() with .components
+* implement and use class ComponentField
+* fixed duplicate field entries for multi-unit parts
+* update default fields Part, Value, Footprint and Datasheet on Import
+
+## TODO
+* fix bug with missing field properties on newly inserted fields
+* set visibility to 0001 (invisible)
+* extract field names from the schematics and CSV --> obsolete FieldKeywords.conf
+
 
 # 2018-03-26
 * allways export KiCad's default fields

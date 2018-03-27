@@ -129,7 +129,6 @@ def load_schematic():
                     "The program is unable to process unanotated components. Do you want to clear imported data?"):
 				mainSchematicFile.deleteContents()
 			break
-		#mainFile.components[i].generateProperties()
 	root.initialDirectory = set_initial_directory(filename)
 
 	if mainSchematicFile.schematicName:

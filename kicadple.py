@@ -18,8 +18,7 @@ class ComponentField:
 
 	# parses the content-line and extracts name, value and number
 	def setContent(self, content):
-		# TODO 0: test
-		searchResult = re.search('F (\d+) "([^"]*)" ([HV] [0-9 A-Z]*[BN])(.*)?', content)
+		searchResult = re.search('F +(\d+) +"([^"]*)" +([HV] [0-9 A-Z]*[BN])(.*)?', content)
 			# group 1: field number
 			# group 2: field value (without double quotes)
 			# group 3: field properties (without leading or trailing spaces)
@@ -45,11 +44,12 @@ class ComponentField:
 
 	# composes the content line from the existing content and the current values of name, value and number
 	def getContent(self):
-		# TODO 0: test
 		s = 'F ' + str(self.number) + ' "' + self.value + '" ' + self._fieldProperties
 		if self.name:
-			s = s + ' "' + self.name + '"'
+			s += ' "' + self.name + '"'
+		s += '\n'
 		return s
+
 
 # The Schematic class
 # holds its filename and all the subcircuits.
@@ -217,35 +217,36 @@ class Schematic:
 			f.write(line + "\n")
 
 			for item in range(len(self.components)):
+				component = self.components[item]
 				# skip export of unlisted components
-				if(self.components[item].unlisted == False):
+				if(component.unlisted == False):
 					line = ""
 					# TODO 2: add quotation marks for each entry (use csv library)
 					#Add Line with component and fields
-					line += self.components[item].name
+					line += component.name
 					line += globals.CsvSeparator
-					line += self.components[item].reference
+					line += component.reference
 					line += globals.CsvSeparator
-					line += self.components[item].unit
+					line += component.unit
 					line += globals.CsvSeparator
-					line += self.components[item].value
+					line += component.value
 					line += globals.CsvSeparator
-					line += self.components[item].footprint
+					line += component.footprint
 					line += globals.CsvSeparator
-					line += self.components[item].datasheet
+					line += component.datasheet
 					line += globals.CsvSeparator
 
 					for field in self.fieldList:
 					#match fields to component.field
-						for counter in range(len(self.components[item].propertyList)):
-							if self.components[item].propertyList[counter][0] == field.name:
-								line += self.components[item].propertyList[counter][1]
+						for counter in range(len(component.propertyList)):
+							if component.propertyList[counter].name == field.name:
+								line += component.propertyList[counter].value
 								line += globals.CsvSeparator
 								break
 							else:
 								line += ""
 
-					line += self.components[item].schematicName
+					line += component.schematicName
 					f.write(line + "\n")
 				#endif
 			#endfor
@@ -269,23 +270,53 @@ class Schematic:
 			for i in range (len(csvFile.components)):#Loop over csv_components
 				for p in range (len(self.components)):#loop over .sch components
 					if csvFile.components[i].reference == self.components[p].getReference() and \
-									self.schematicName ==  csvFile.components[i].getSchematic(): #if annotation and schematic name match
+							self.schematicName ==  csvFile.components[i].getSchematic() and \
+							csvFile.components[i].unit == self.components[p].unit: #if annotation and schematic name match
 
-						selectedComponent = self.components[p]
-						selectedComponent.addNewInfo(csvFile.components[i].propertyList)
+						comp = self.components[p]
 
-						for property in range(len(selectedComponent.propertyList)):
+						# assign KiCad's default fields:
+						comp.name = csvFile.components[i].name
+						comp.value = csvFile.components[i].value
+						comp.footprint = csvFile.components[i].footprint
+						comp.datasheet = csvFile.components[i].datasheet
 
-							if not selectedComponent.propertyList[property][3] == 0: #Not exists for adding fields through .csv
-							#Datafield existed in original file
+						lineTemplate = ""
 
-								self.contents[selectedComponent.startPosition+selectedComponent.propertyList[property][3]] = \
-									selectedComponent.propertyList[property][2]
+						for ii in range(comp.startPosition,comp.endPosition):
+							line = self.contents[ii]
+							helper = ComponentField() # helper for creating 'F x ' records
+
+							if line[0:2] == 'L ':
+								self.contents[ii] = 'L ' + comp.name + ' ' + comp.reference + '\n'
+							elif line[0:4] == 'F 1 ':  # component value
+								helper.setContent(line)
+								helper.value = comp.value
+								self.contents[ii] = helper.getContent()
+
+								lineTemplate = line # save a template line for newly to be created fields
+							elif line[0:4] == 'F 2 ':  # component footprint
+								helper.setContent(line)
+								helper.value = comp.footprint
+								self.contents[ii] = helper.getContent()
+							elif line[0:4] == 'F 3 ':  # component datasheet
+								helper.setContent(line)
+								helper.value = comp.datasheet
+								self.contents[ii] = helper.getContent()
+
+						comp.updateAllMatchingFieldValues(csvFile.components[i].propertyList)
+
+						for property in range(len(comp.propertyList)):
+
+							# if Datafield exists in original file: replace it
+							if comp.propertyList[property].relativeLine > 0:
+								self.contents[comp.startPosition+comp.propertyList[property].relativeLine] = \
+									comp.propertyList[property].getContent()
 							else:
-								self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] = \
-									self.contents[selectedComponent.startPosition+selectedComponent.lastContentLine] + \
-									selectedComponent.generatePropertyLine(property)
-							#datafield not in original file
+								# otherwise we have to append it
+								self.contents[comp.startPosition+comp.lastContentLine] += \
+									comp.propertyList[property].getContent()
+
 			try:
 				f = open(savepath, 'w')
 			except IOError:
@@ -322,7 +353,7 @@ class Schematic:
 # contains all the lines of a Schematic file, which belong to one component.
 # it provides two main methods:
 #   * extractProperties()
-#   * generatePropertyLine()
+#   * updateAllMatchingFieldValues()
 #
 
 class Component:
@@ -334,7 +365,8 @@ class Component:
 
 		self.schematicName = "" # relative file name (*.sch)
 		self.name = "" # component name in the symbol library eg R
-		self.unit = 0 # integer number used for components with multiple units (eg. quad opamp) TODO 1: implement unit
+		self.unit = 0 # integer number used for components with multiple units (eg. quad opamp)
+			# TODO 2: do not export multiple units for one reference, but update all components with that reference
 		self.reference = "" # (common) reference of the component, defined by the annotation eg R501
 			# for multiple instances (in subsheets) we have to use the uniqueReference
 		self.referenceUnique = ""  # unique reference of the component, defined by the annotation eg R501
@@ -345,7 +377,7 @@ class Component:
 		# refactor the field extraction
 
 		# list of 4-tuples: String kicadField.name, String fieldValue, String lineContent, int relative lineNr]
-		self.propertyList = []
+		self.propertyList = [] # list of ComponentField objects
 		self.contents = "" # contains all the lines, including $Comp and $EndComp
 
 		self.fieldList = []; # list of KicadField objects.
@@ -353,7 +385,6 @@ class Component:
 
 		# relative line number within this component lines; 0 = $Comp
 		self.lastContentLine = 0 #
-		self.lastFieldLineNr = 0
 		self.unlisted = False # used for power components, e.g. GND #PWR123; they get not exported to CSV
 
 	def setStartPos(self, x):
@@ -385,14 +416,12 @@ class Component:
 		print(self.reference)
 		print(self.value)
 		print(self.schematicName)
+		print(self.datasheet)
 
 	def printAll(self):
 		print(self.startPosition)
 		print(self.endPosition)
-		print(self.name)
-		print(self.reference)
-		print(self.value)
-		print(self.schematicName)
+		self.printProps()
 
 	def getStartLine(self):
 		return self.startPosition
@@ -424,6 +453,9 @@ class Component:
 		fieldFound={}
 		for anyField in self.fieldList:
 			fieldFound[anyField] = False
+
+		fieldTemplate = "" # used for new extra fields
+		maxFieldNr = 0 # used for new extra fields
 
 		for line_nr in range(len(self.contents)):
 			line  = self.contents[line_nr]
@@ -480,7 +512,7 @@ class Component:
 			# the number for Part= varies e.g. from 1 to 4 for a component with 4 Units (e.g. LM324)
 			# NOTE; it is not clear, for what reason we get this record only for some components...
 			# we print just a message
-			# we don't use the data any further
+			# for now, we don't use the data any further
 			if "AR Path=" in line:
 				# extract the path, Ref and Part into regex groups:
 				searchResult = re.search('AR +Path="(.*)" +Ref="(.*)" +Part="(.*)".*', line)
@@ -571,7 +603,10 @@ class Component:
 			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
 
 			if searchResult:
-				fieldNr = searchResult.group(1)  # not used in this code
+				fieldNr = searchResult.group(1)
+				if fieldNr > maxFieldNr:
+					maxFieldNr = fieldNr
+
 				fieldValue = searchResult.group(2)
 				fieldName = searchResult.group(3)
 
@@ -585,8 +620,10 @@ class Component:
 									  + " in file " + self.schematicName)
 							fieldFound[anyField] = True
 							tempFound = True
-							self.propertyList.append(
-								[anyField.name, fieldValue, line, line_nr])  # convert to tuple
+							cf = ComponentField()
+							cf.setContent(line)
+							cf.relativeLine = line_nr
+							self.propertyList.append(cf) 
 							break
 					if tempFound == True:
 						break
@@ -598,124 +635,28 @@ class Component:
 		# set default values for non-found fields:
 		for anyField in self.fieldList:
 			if fieldFound[anyField] == False:
-				self.propertyList.append([anyField.name, "", "", 0]) # add tuple to list
+				cf = ComponentField() # TODO 0: set template line here
+				cf.setContent(fieldTemplate)
+				cf.number = maxFieldNr
+				maxFieldNr += 1
+				cf.name = anyField.name
+				self.propertyList.append(cf)
 
 		print("") # just a breakpoint anchor
 
-	def findLastFieldLine(self):
-		line_counter = 0
-		# find first field line (F 0 ):
-		for line_nr in range(len(self.contents)):
-			if self.contents[line_nr][:2] == "F ":
-				line_counter = line_nr
-				break
-		# and then search for the last field line:
-		for line_nr in range(line_counter, len(self.contents)):
-			if not self.contents[line_nr][:2] == "F ":
-				self.lastContentLine = line_nr - 1
-
-				searchResult = re.search('F +([0-9]+) +"(.*)" .*', self.contents[self.lastContentLine])
-
-				if searchResult:
-					fieldNr = searchResult.group(1)
-
-				# self.lastFieldLineNr = int(self.contents[line_nr - 1][2]) # <<= here is the BUG! breaks for numbers with more than 1 digit!
-					self.lastFieldLineNr = int(fieldNr)
-					break
-				else:
-					print("Error: Regex mismatch on extraction of field number in this line: " +
-						  self.contents[self.lastContentLine])
-
-	def getCleanLine(self, lineToBeCleaned):
-		# function to create a clean string to generate new entries
-		positions = []
-		for r in range(len(lineToBeCleaned)):
-			if lineToBeCleaned[r] == "\"":
-				positions.append(r)
-		if (len(positions) > 2):
-			# this line has been contaminated
-			lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + \
-							   lineToBeCleaned[positions[1]:positions[2]] + \
-							   lineToBeCleaned[positions[3]+1:]
-		else:
-			# this line was clean or there was a tilde sign in there
-			if "\"~\"" in lineToBeCleaned:
-				# tilde is found in in kicad schematics with rescued symbols
-				lineToBeReturned = lineToBeCleaned[:positions[0] + 1] + lineToBeCleaned[positions[1]:]
-			else:
-				lineToBeReturned = lineToBeCleaned
-		if "0000" in lineToBeReturned:
-			i = 0
-			for i in range(len(lineToBeReturned) - 4):
-
-				if lineToBeReturned[i:i + 4] == "0000":
-					break
-
-			lineToBeReturned = lineToBeReturned[:i] + "0001" + lineToBeReturned[i + 4 - len(lineToBeReturned):]
-		# print(lineToBeReturned)
-		return lineToBeReturned
-
-	def generatePropertyLine(self, property_nr):
-		cleanLine = self.getCleanLine(self.contents[self.lastContentLine])
-
-		# NOTE: here was a major bug: the concattenation broke for field-numbers >= 10 (!!!)
-
-		searchResult = re.search('F (\d+) ".*"( [HV] [0-9 A-Z]*).*', cleanLine)
-
-		if searchResult:
-			if searchResult.group(1):
-				fieldNumber = searchResult.group(1)
-				if(fieldNumber != self.lastFieldLineNr):
-					print("Sanity Error: wrong field number in " + self.schematicName + ": " + self.contents[self.lastContentLine])
-			else:
-				print("Error: Regex missmatch: cannot find field number")
-
-			if searchResult.group(2):
-				fieldProperties = searchResult.group(2)
-			else:
-				print("Error: Regex missmatch: cannot find field properties")
-
-		self.lastFieldLineNr += 1
-
-		fieldValue = self.propertyList[property_nr][1]
-		fieldName = self.propertyList[property_nr][0]
-
-		newFieldLine = 'F ' + str(self.lastFieldLineNr) + ' "' + fieldValue + '" ' + \
-			   fieldProperties + ' "' + fieldName + '" \n'
-
-		return newFieldLine
-
-	def addNewInfo(self, csvPropertyList):
+	# Find all matching ComponentFild objects with the properties from the CSV,
+	# and update their values.
+	def updateAllMatchingFieldValues(self, csvPropertyList):
 		for csvProperty in csvPropertyList:
 			for schProperty in self.propertyList:
-				if csvProperty[0].name == schProperty[0]:  # matching property names
-					if not (schProperty[1] == csvProperty[1]):
-						schProperty[1] = csvProperty[1]  # copy CSV property data to SCH property
-						positions = [] # list of index, where double-quotes are in the
-
-						# find all double-quotes (")
-						for r in range(len(schProperty[2])):
-							if schProperty[2][r] == "\"":
-								positions.append(r)
-
-						if not schProperty[3] == 0:  # if existing fieldname line nr of field != 0
-							schProperty[2] = schProperty[2][:positions[0] + 1] + schProperty[1] + \
-											 schProperty[2][positions[1]:]
-						else:
-							schProperty[2] = schProperty[1]
-							schProperty[3] = 0  # 0 IS FLAG FOR NEW FIELDNAME
-
-
-
-
-
-
-
+				# TODO 2: strange csvProperty usage, should be fixed
+				if csvProperty[0].name == schProperty.name:  # matching property names
+					schProperty.value = csvProperty[1]  # copy CSV property data to SCH property
 
 
 class CsvComponent(object):
 	def __init__(self):
-		self.part = ""  # component library name, e.g. D_Schottky
+		self.name = ""  # component library name, e.g. D_Schottky
 		self.reference = "" # Component reference e.g. R517
 		self.unit = "" # unit
 		self.value = "" # component value, e.g. 4k7
@@ -728,8 +669,15 @@ class CsvComponent(object):
 		self.Contents = ""
 		self.fieldList = [];
 		self.fieldOrder = [];
+
 	def printprops(self):
+		print(self.name)
 		print(self.reference)
+		print(self.unit)
+		print(self.value)
+		print(self.footprint)
+		print(self.datasheet)
+		print(self.schematic)
 
 	def setName(self,name):
 		self.name = name
@@ -836,7 +784,7 @@ class CsvFile(object):
 			for value in values:
 				# TODO 3: replace these constants with a common definition in globals
 				if columnNames[column] == 'Part':
-					newCsvComponent.part = value
+					newCsvComponent.name = value
 				elif columnNames[column] == 'Reference':
 					newCsvComponent.reference = value
 				elif columnNames[column] == 'Unit':
