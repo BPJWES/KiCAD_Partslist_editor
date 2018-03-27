@@ -12,9 +12,9 @@ class ComponentField:
 		self.value = "" # Field Value, at the beginning of the Line after the "F xx " record header
 		self._content = "" # text line for the schematic file, including \n at the end. Use getter and setter!
 		self.number = 0 # fields in KiCad are numbered, where 0,1,2 and 3 are reserved for reference, value, footprint and datasheet
-		self.relativeLine = 0 # relative line within a component, where $COMP is line 0; Zero means, this field
-			# doesn't exist in the schematic
+		self.relativeLine = 0 # relative line within a component, where $COMP is line 0
 		self._fieldProperties = "" # is extracted from the content. Starts with 'H' or 'V', and typically ends with 'CNN'.
+		self.exists = True # by default, we assume, that this field exists in the Schematic file
 
 	# parses the content-line and extracts name, value and number
 	def setContent(self, content):
@@ -307,15 +307,14 @@ class Schematic:
 						comp.updateAllMatchingFieldValues(csvFile.components[i].propertyList)
 
 						for property in range(len(comp.propertyList)):
-
-							# if Datafield exists in original file: replace it
-							if comp.propertyList[property].relativeLine > 0:
+							if comp.propertyList[property].exists:
 								self.contents[comp.startPosition+comp.propertyList[property].relativeLine] = \
 									comp.propertyList[property].getContent()
 							else:
 								# otherwise we have to append it
-								self.contents[comp.startPosition+comp.lastContentLine] += \
+								self.contents[comp.startPosition+comp.propertyList[property].relativeLine] += \
 									comp.propertyList[property].getContent()
+						# end for(all properties)
 
 			try:
 				f = open(savepath, 'w')
@@ -453,7 +452,8 @@ class Component:
 			fieldFound[anyField] = False
 
 		fieldTemplate = "" # used for new extra fields
-		maxFieldNr = 0 # used for new extra fields
+		maxFieldNr = 4 # used for new extra fields; 4 is the minimum number for extra fields. 0 to 3 are default fields
+		lastExistingFieldLine = 0 # used for adding new extra fields; relative to $COMP (which is zero)
 
 		for line_nr in range(len(self.contents)):
 			line  = self.contents[line_nr]
@@ -526,6 +526,9 @@ class Component:
 			# Example
 			# F 0 "R51" H 5820 2046 50  0000 L CNN
 			if line[0:4] == "F 0 ":
+				if line_nr > lastExistingFieldLine:
+					lastExistingFieldLine = line_nr
+
 				searchResult = re.search('F 0 +"(.*)" +.*', line)
 
 				if searchResult:
@@ -553,6 +556,9 @@ class Component:
 			# Value, Example:
 			# F 1 "LTC2052IS#PBF" H 9750 5550 50  0000 C CNN
 			if "F 1 " in line:  # find f1 indicating value field in EEschema file format
+				if line_nr > lastExistingFieldLine:
+					lastExistingFieldLine = line_nr
+
 				searchResult = re.search('F 1 +"(.*)".*', line)
 
 				if searchResult:
@@ -568,6 +574,9 @@ class Component:
 			# Footprint, Example:
 			# F 2 "standardSMD:R0603" V 5680 2000 50  0001 C CNN
 			if "F 2 " in line:  # find f1 indicating value field in EEschema file format
+				if line_nr > lastExistingFieldLine:
+					lastExistingFieldLine = line_nr
+
 				searchResult = re.search('F 2 +"(.*)".*', line)
 
 				if searchResult:
@@ -584,6 +593,9 @@ class Component:
 			# Datasheet; Example:
 			# F 3 "" H 5750 2000 50  0000 C CNN
 			if "F 3 " in line:  # find f1 indicating value field in EEschema file format
+				if line_nr > lastExistingFieldLine:
+					lastExistingFieldLine = line_nr
+
 				fieldTemplate = line # use the Datasheet field as a template for new extra fields
 
 				searchResult = re.search('F 3 +"(.*)".*', line)
@@ -603,6 +615,9 @@ class Component:
 			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
 
 			if searchResult:
+				if line_nr > lastExistingFieldLine:
+					lastExistingFieldLine = line_nr
+
 				fieldNr = int(searchResult.group(1))
 				if fieldNr > maxFieldNr:
 					maxFieldNr = fieldNr
@@ -638,6 +653,8 @@ class Component:
 				cf = ComponentField() # TODO 0: set template line here
 				cf.setContent(fieldTemplate)
 				cf.number = maxFieldNr
+				cf.relativeLine = lastExistingFieldLine
+				cf.exists = False
 				maxFieldNr += 1
 				cf.name = anyField.name
 				self.propertyList.append(cf)
