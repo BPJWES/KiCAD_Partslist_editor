@@ -16,6 +16,14 @@ class ComponentField:
 		self._fieldProperties = "" # is extracted from the content. Starts with 'H' or 'V', and typically ends with 'CNN'.
 		self.exists = True # by default, we assume, that this field exists in the Schematic file
 
+		self.orientation = 'H' # horizontal
+		self.xPos = 0
+		self.yPos = 0
+		self.textSize = 50 # mil
+		self.visibility = '0001' # invisible
+		self.hAdjust = 'C' # center
+		self.vAdjustIB = 'CNN' # center, normal, normal
+
 	# parses the content-line and extracts name, value and number
 	def setContent(self, content):
 		searchResult = re.search('F +(\d+) +"([^"]*)" +([HV] [0-9 A-Z]*[BN])(.*)?', content)
@@ -38,13 +46,32 @@ class ComponentField:
 				else:
 					self.name = ""
 
+
+			searchResult = re.search('([HV]) +([\d]+) +([\d]+) +([\d]+) +([\d]+) ([LRCBT]) ([LRCBT][IN][BN])', self._fieldProperties)
+			if searchResult:
+				self.orientation = searchResult.group(1)
+				self.xPos = int(searchResult.group(2))
+				self.yPos = int(searchResult.group(3))
+				self.textSize = int(searchResult.group(4))
+				self.visibility = searchResult.group(5)
+				self.hAdjust = searchResult.group(6)
+				self.vAdjustIB = searchResult.group(7)
+			else:
+				print("Error: Regex missmatch in '" + self._fieldProperties + "'")
 		else:
 			print("Error: Regex missmatch in ComponentField:setContent(" + content + ")")
 
 
 	# composes the content line from the existing content and the current values of name, value and number
 	def getContent(self):
-		s = 'F ' + str(self.number) + ' "' + self.value + '" ' + self._fieldProperties
+		fProps = self.orientation + ' ' + \
+			str(self.xPos) + ' ' + str(self.yPos) + ' ' +\
+			str(self.textSize) + '  ' +\
+			self.visibility + ' ' +\
+			self.hAdjust + ' ' +\
+			self.vAdjustIB
+
+		s = 'F ' + str(self.number) + ' "' + self.value + '" ' + fProps
 		if self.name:
 			s += ' "' + self.name + '"'
 		s += '\n'
@@ -452,7 +479,7 @@ class Component:
 			fieldFound[anyField] = False
 
 		fieldTemplate = "" # used for new extra fields
-		maxFieldNr = 4 # used for new extra fields; 4 is the minimum number for extra fields. 0 to 3 are default fields
+		maxFieldNr = 3 # used for new extra fields; 0 to 3 are default fields
 		lastExistingFieldLine = 0 # used for adding new extra fields; relative to $COMP (which is zero)
 
 		for line_nr in range(len(self.contents)):
@@ -652,10 +679,11 @@ class Component:
 			if fieldFound[anyField] == False:
 				cf = ComponentField() # TODO 0: set template line here
 				cf.setContent(fieldTemplate)
-				cf.number = maxFieldNr
+				cf.visibility = '0001'
+				cf.number = maxFieldNr+1
+				maxFieldNr += 1
 				cf.relativeLine = lastExistingFieldLine
 				cf.exists = False
-				maxFieldNr += 1
 				cf.name = anyField.name
 				self.propertyList.append(cf)
 
