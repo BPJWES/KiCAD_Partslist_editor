@@ -447,8 +447,6 @@ class Component:
 	# $EndComp
 	def extractProperties(self):
 
-		self.findLastFieldLine()
-
 	# temporary dictionay, if we have all fields found
 		fieldFound={}
 		for anyField in self.fieldList:
@@ -586,6 +584,8 @@ class Component:
 			# Datasheet; Example:
 			# F 3 "" H 5750 2000 50  0000 C CNN
 			if "F 3 " in line:  # find f1 indicating value field in EEschema file format
+				fieldTemplate = line # use the Datasheet field as a template for new extra fields
+
 				searchResult = re.search('F 3 +"(.*)".*', line)
 
 				if searchResult:
@@ -603,7 +603,7 @@ class Component:
 			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
 
 			if searchResult:
-				fieldNr = searchResult.group(1)
+				fieldNr = int(searchResult.group(1))
 				if fieldNr > maxFieldNr:
 					maxFieldNr = fieldNr
 
