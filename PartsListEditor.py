@@ -5,9 +5,12 @@ from tkinter import messagebox
 from configparser import ConfigParser
 import os
 
+import debugtrace as DT
 
 import kicadple
 import globals
+
+DT.setLevel(4)
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
@@ -22,7 +25,7 @@ def read_settings():
 		f = open(fieldsConfigFile)
 		
 	except IOError:
-		print("Error: can\'t find file or read data")
+		DT.error("can\'t find file or read data")
 	configfile = f.readlines()
 	if "KiCAD PLE Config file v1.1" in configfile[0]:
 		
@@ -49,9 +52,10 @@ def read_settings():
 			
 		
 	else:
-		print("incorrect config file")
+		DT.error("incorrect config file")
 
 def load_schematic():
+	DT.clear()
 	globals.ParsedSchematicFiles = [] # clear this list.
 
 	config = ConfigParser()
@@ -84,7 +88,7 @@ def load_schematic():
 		try:
 			f = open(filename)
 		except IOError:
-			print("Error: can\'t find file or read data")
+			DT.error("can\'t find file or read data")
 		else:
 			mainSchematicFile.setPath(filename)
 			dataTestDump = f.readlines()[0]
@@ -100,11 +104,10 @@ def load_schematic():
 			try:
 				f = open(filename)
 			except IOError:
-				print("Error: can\'t find file or read data")
+				DT.error("can\'t find file or read data")
 			else:
 				mainSchematicFile.SetContents(f.readlines())
 				mainSchematicFile.fieldList = fieldList;
-				#print(FieldList)
 
 				mainSchematicFile.schematicName = os.path.basename(filename)
 
@@ -144,6 +147,9 @@ def load_schematic():
 	else:
 		statusLabel['text'] = "Start by loading a KiCad schematic file..."
 
+	print("Summary of loading schematic: ")
+	DT.summary()
+
 	
 	
 def set_initial_directory(filename):
@@ -152,6 +158,7 @@ def set_initial_directory(filename):
 
 
 def generate_csv():
+	DT.clear()
 	initialDirectory = root.initialDirectory
 	if len(mainSchematicFile.components) > 0:
 		root.path_to_save = filedialog.asksaveasfilename(initialdir = initialDirectory, filetypes = (("Comma seperated values", ".csv"),("All Files",".*")))
@@ -163,6 +170,7 @@ def generate_csv():
 			statusLabel['text'] = "Saved: " + str(root.path_to_save)
 	else:
 		messagebox.showerror("Cannot generate .CSV", "No SCH File loaded")
+	DT.summary()
 
 
 def my_break():
@@ -241,12 +249,14 @@ def sort_parts():
 
 
 def load_csv():
+	DT.clear()
+
 	config = ConfigParser()
 	config.read('config.ini')
 
 	initialDirectory = config.get('main', 'lastDirectory', fallback="")
 
-	mainSchematicFile.printprops()
+	#mainSchematicFile.printprops()
 	if initialDirectory == "":
 		root.filename = filedialog.askopenfilename(
 			filetypes=(("KiCAD Partslist-editor files", ".csv"), ("All Files", ".*")))
@@ -297,8 +307,15 @@ def load_csv():
 		if filename:
 			messagebox.showerror("FileParseError", "This is not a valid CSV document (*.csv or *.CSV)")
 
+	print("Summary for importing from CSV: ")
+	DT.summary()
+
+	DT.info(str(len(csvFile.components)) + ' components were imported from CSV')
+
 	
 def build_new_schematic():
+	DT.clear()
+
 	initialDirectory = root.initialDirectory
 	if mainSchematicFile.components and csvFile.components:
 		print(root.lastSchematicFileName)
@@ -316,6 +333,9 @@ def build_new_schematic():
 			messagebox.showerror("Processing Error", "No SCH File Loaded")
 		else:
 			messagebox.showerror("Processing Error", "No Files Loaded")
+
+	print("Summary for writing to schematic files: ")
+	DT.summary()
 			
 			
 def clean_memory():

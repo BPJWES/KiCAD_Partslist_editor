@@ -12,9 +12,6 @@ Changelog for the KiCad Partslist Editor
 * index column 'Index' with a line counting number
 * gives ability to sort the list and do a proper file comparison with diff after manipulations
 
-## Error and Warnings Handling
-* show a summary to the user
-
 
 # 2018-03-27
 * add class ComponentField with regex parser using regex101.com
@@ -25,6 +22,7 @@ Changelog for the KiCad Partslist Editor
 * fixed bug with missing field properties on newly inserted fields
 * set visibility of new fields to 0001 (invisible)
 * tested reexport, which produced identical ple.csv
+* add error and warnings handling, show a summary to the user
 
 # 2018-03-26
 * allways export KiCad's default fields

@@ -4,6 +4,7 @@ import os
 import re
 import globals
 
+import debugtrace as DT
 
 # This class holds the values for a field line from a KiCad schematic file
 class ComponentField:
@@ -57,9 +58,9 @@ class ComponentField:
 				self.hAdjust = searchResult.group(6)
 				self.vAdjustIB = searchResult.group(7)
 			else:
-				print("Error: Regex missmatch in '" + self._fieldProperties + "'")
+				DT.error("Regex missmatch in '" + self._fieldProperties + "'")
 		else:
-			print("Error: Regex missmatch in ComponentField:setContent(" + content + ")")
+			DT.error("Regex missmatch in ComponentField:setContent(" + content + ")")
 
 
 	# composes the content line from the existing content and the current values of name, value and number
@@ -139,7 +140,7 @@ class Schematic:
 							ListOfSubSchematics.append(searchResult.group(1))
 							break
 						else:
-							print("Error: cannot find schematic name in F1-record within $Sheet-block "+
+							DT.error("cannot find schematic name in F1-record within $Sheet-block "+
 								  "in file " + self.schematicName + " in line number " + count)
 					count += 1
 				#endwhile
@@ -176,12 +177,6 @@ class Schematic:
 		# end for(all lines)
 
 		for subcircuitCounter in range(len(self.namesOfSubcircuits)):
-			#print("subcircuit")
-			#for p in range (len(self.path)):
-			#	if self.path[-p] == "/":
-			#		break
-			#to_open = self.path[:-p+1] + self.subcircuits_names[subcircuitCounter]
-
 			global ParsedSchematicFiles;
 
 			subFilePathName = os.path.join(os.path.dirname(self.path), self.namesOfSubcircuits[subcircuitCounter])
@@ -208,7 +203,7 @@ class Schematic:
 					# see also exportCsvFile()
 					self.components.extend(subSchematic.components)
 			else:
-				print("Trace: skip for deduplication: " + subFilePathName)
+				DT.debug("skip for deduplication: " + subFilePathName)
 
 		# end for(all subcircuits)
 
@@ -289,8 +284,9 @@ class Schematic:
 		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
 		# should be fixed now but am not sure
 
-		print("Number of Parts in CSV: " + str(len(csvFile.components)))
-		print("Number of Parts in this SCH: " + str(len(self.components)))
+		# TODO 2: improve this messages: SCH and CSV parts should match
+		DT.info("Number of Parts in CSV: " + str(len(csvFile.components)))
+		DT.info("Number of Parts in this SCH: " + str(len(self.components)))
 
 		if len(csvFile.components) and len(self.components):
 
@@ -354,11 +350,11 @@ class Schematic:
 
 			for i in range(len(self.subcircuits)):
 				newSavePath = os.path.join(os.path.dirname(savepath), self.namesOfSubcircuits[i])
-				print(newSavePath)
+				DT.info(newSavePath)
 				self.subcircuits[i].ModifyNewSCHFile(0, csvFile, newSavePath)
 				#mainFile.ModifyNewSCHFile(0, openCSVFile,savePath):
 		else:
-			print("No components loaded")
+			DT.error("No components loaded")
 
 	def deleteContents(self):
 		for p in range (len(self.subcircuits)):
@@ -498,7 +494,7 @@ class Component:
 					self.reference = componentRef
 					self.name = componentName
 
-					print("Trace: Found Component: "
+					DT.debug("Found Component: "
 						  + componentName + " " + componentRef)
 
 					# Special case for power-components: don't parse them
@@ -509,7 +505,7 @@ class Component:
 					continue
 
 				else:
-					print("Error: Regex Missmatch for L-record in line: " +
+					DT.error("Regex Missmatch for L-record in line: " +
 						  line + " in file " + self.schematicName)
 				# endelse
 			# endif L
@@ -527,7 +523,7 @@ class Component:
 					self.unit = componentUnit
 					continue
 				else:
-					print("Error: Regex Missmatch for 'U '-record in line: " +
+					DT.error("Regex Missmatch for 'U '-record in line: " +
 						  line + " in file " + self.schematicName)
 				# end else
 			# endif U
@@ -548,7 +544,7 @@ class Component:
 					componentUnit = searchResult.group(3)
 
 					# Print some messages
-					print('Info: AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
+					DT.debug('AR Record: ' + componentPath + ' ' + componentRef + ' ' + componentUnit)
 
 			# Example
 			# F 0 "R51" H 5820 2046 50  0000 L CNN
@@ -567,12 +563,12 @@ class Component:
 					#self.referenceUnique = componentRef
 
 					if not (componentRef == self.reference):
-						print("Info: L record value doesn't match 'F 0 ' record: "
-							  + self.reference + " vs. " + componentRef + " in '" +
+						DT.info("L record value doesn't match 'F 0 ' record: "\
+							  + self.reference + " vs. " + componentRef + " in '" +\
 						  line + "' in file " + self.schematicName)
 					continue
 				else:
-					print("Error: Regex Missmatch for 'F 0 '-record in line: " +
+					DT.error("Regex Missmatch for 'F 0 '-record in line: " +\
 						  line + " in file " + self.schematicName)
 				# endelse
 			# endif F 0
@@ -593,7 +589,7 @@ class Component:
 					self.value = componentValue
 					continue
 				else:
-					print("Error: Regex Mismatch, cannot find value in 'F 1 '-record in '" +
+					DT.error("Regex Mismatch, cannot find value in 'F 1 '-record in '" +
 						  line + "' in file " + self.schematicName)
 				# end if
 			# endif F 1
@@ -611,7 +607,7 @@ class Component:
 					self.footprint = componentFootprint
 					continue
 				else:
-					print("Error: Regex Mismatch, cannot find value in 'F 2 '-record (footprint) in '" +
+					DT.error("Regex Mismatch, cannot find value in 'F 2 '-record (footprint) in '" +
 						  line + "' in file " + self.schematicName)
 				# end if
 				# endif F 2
@@ -632,7 +628,7 @@ class Component:
 					self.datasheet = componentDatasheet
 					continue
 				else:
-					print("Error: Regex Mismatch, cannot find value in 'F 3 '-record (datasheet) in '" +
+					DT.error("Regex Mismatch, cannot find value in 'F 3 '-record (datasheet) in '" +
 						  line + "' in file " + self.schematicName)
 				# end if
 				# endif F 3
@@ -657,7 +653,7 @@ class Component:
 					for Alias in anyField.Aliases:
 						if Alias == fieldName:
 							if fieldFound[anyField] is True:
-								print("Warning: duplicate definition of Field " + fieldName + " with Alias " + Alias
+								DT.warning("duplicate definition of Field " + fieldName + " with Alias " + Alias
 									  + " for Component " + self.getReference()
 									  + " in file " + self.schematicName)
 							fieldFound[anyField] = True
@@ -686,8 +682,6 @@ class Component:
 				cf.exists = False
 				cf.name = anyField.name
 				self.propertyList.append(cf)
-
-		print("") # just a breakpoint anchor
 
 	# Find all matching ComponentFild objects with the properties from the CSV,
 	# and update their values.
@@ -791,10 +785,6 @@ class CsvFile(object):
 	def printLine(self, line):
 		print(self.contents[line])
 
-	def printComponents(self):
-		for i in range (len(self.components)):
-			print(self.components[i].getFarnellLink())
-
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self):
 		if globals.CsvSeparator not in self.contents[1]:
@@ -850,7 +840,7 @@ class CsvFile(object):
 
 			self.components.append(newCsvComponent)
 
-		print("finished component extractions")
+		DT.info("finished component extractions")
 
 	def deleteContents(self):
 		for i in range (len(self.components)):
