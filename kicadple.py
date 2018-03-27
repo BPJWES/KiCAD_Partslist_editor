@@ -208,6 +208,7 @@ class Schematic:
 		# end for(all subcircuits)
 
 		# TODO 2: check for consistent components with multiple units
+		# TODO 2: add warnings,	if footprint and/ or value for one components is different between the units
 
 	def exportCsvFile(self, savepath):
 	#New variant which allows for user configurable field names

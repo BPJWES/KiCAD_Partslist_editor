@@ -1,19 +1,8 @@
 Changelog for the KiCad Partslist Editor
 ========================================
 
-# Missing Features
-## Extract Field Names from Schematics and CSV
-* obsolete FieldKeywords.conf
-* type of fields are managed by project data without metadata
-* new fields can be defined by the CSV
-* redundant field names can easily be merged within CSV-spreadsheet with 'auto-filter'
-
-## Index Column
-* index column 'Index' with a line counting number
-* gives ability to sort the list and do a proper file comparison with diff after manipulations
-
-
-# 2018-03-27
+# V18.0.1
+2018-03-27
 * add class ComponentField with regex parser using regex101.com
 * replaced getComponents() with .components
 * implement and use class ComponentField
@@ -23,8 +12,12 @@ Changelog for the KiCad Partslist Editor
 * set visibility of new fields to 0001 (invisible)
 * tested reexport, which produced identical ple.csv
 * add error and warnings handling, show a summary to the user
+* update readme and cleaned up project directory
+* add version string to the window title
+* modified copyright
 
-# 2018-03-26
+# V18.0.0
+2018-03-26
 * allways export KiCad's default fields
   * Part
   * Reference
@@ -38,3 +31,15 @@ Changelog for the KiCad Partslist Editor
 * make CSV separator configurable with config.ini
 * using os module for file name and path manipulations
 
+# Before Oct. 2017
+* add value capability i.e. reading in the value field from a csv file
+* add multi_file capability for reading in data
+* add exception handling to file operations
+* add relative paths
+* add annotation checking - done
+* add delete functionality -done
+* make sure the links will be hidden
+* fix schematic name
+* remember paths for saving and opening files during a session
+* auto add .csv extension for filename
+* remember paths between sessions

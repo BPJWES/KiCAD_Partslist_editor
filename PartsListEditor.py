@@ -1,3 +1,8 @@
+
+# TODO 3: make suggested filenames
+# TODO 4: autogenerate filename for KiCAD_PLE_BOM.csv
+# TODO 2: Build Windows Executable
+
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -12,6 +17,8 @@ import globals
 
 DT.setLevel(4)
 
+version = "18.0.1"
+
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
 initialDirectory = "" 
@@ -20,7 +27,6 @@ fieldList = [];
 
 
 def read_settings():
-	
 	try:
 		f = open(fieldsConfigFile)
 		
@@ -344,15 +350,16 @@ def clean_memory():
 	statusLabel['text'] = "Memory cleared \n All stored components deleted!"
 
 def show_about_dialog():
-	messagebox.showinfo("About KiCad Partslist Editor", "Use this tool to comfortably modify many parts fields in your favourite spreadsheet programm (e.g. LibreOffice Calc)\n" +
-						"Written by BPJWES\n" +
+	messagebox.showinfo("KiCad Partslist Editor V"+version, "Use this tool to comfortably modify many parts fields in your favourite spreadsheet programm (e.g. LibreOffice Calc)\n" +
+						"Written by BPJWES, 2016\n" +
+						"and Karl Zeilhofer, 2017-2018\n" +
 						"https://github.com/BPJWES/KiCAD_Partslist_editor")
 
 root = Tk()
 
 root.initialDirectory = ""
 root.configure(background='white')
-root.title("KiCad Partslist Editor")
+root.title("KiCad Partslist Editor V" + version)
 root.bind("<Escape>", lambda e: e.widget.quit())
 background_image = PhotoImage(file="KICAD_PLE.png")
 background = Label(root, image=background_image, bd=0)
