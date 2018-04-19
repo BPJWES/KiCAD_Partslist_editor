@@ -566,7 +566,8 @@ class Component:
 					if not (componentRef == self.reference):
 						DT.info("L record value doesn't match 'F 0 ' record: "\
 							  + self.reference + " vs. " + componentRef + " in '" +\
-						  line + "' in file " + self.schematicName)
+						  line + "' in file " + self.schematicName + ". Using 'F 0' records value: " + componentRef)
+						self.reference = componentRef
 					continue
 				else:
 					DT.error("Regex Missmatch for 'F 0 '-record in line: " +\
