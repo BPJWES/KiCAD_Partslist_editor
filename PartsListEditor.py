@@ -17,7 +17,7 @@ import globals
 
 DT.setLevel(4)
 
-version = "18.0.1"
+version = "18.0.2"
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
@@ -100,7 +100,7 @@ def load_schematic():
 			dataTestDump = f.readlines()[0]
 			f.close()
 
-		if dataTestDump[:-1] == "EESchema Schematic File Version 2":
+		if dataTestDump[:-1] == "EESchema Schematic File Version 2" or dataTestDump[:-1] == "EESchema Schematic File Version 4": # support for KiCad4 and KiCad5
 			# TODO 2: move the laoding of a schematic file into the Schematic class!
 			# --> make use of recursive loading of schematics
 

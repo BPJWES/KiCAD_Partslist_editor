@@ -1,6 +1,17 @@
 Changelog for the KiCad Partslist Editor
 ========================================
 
+## TODOs
+* use CSV lib
+
+
+# V18.0.2:
+2018-05-01
+* support for schematic version 4 (KiCad 5)
+* automatic override of the L record's reference, by the 'F 0' value
+* fixed: components on the root sheet didn't get updated in all cases
+
+
 # V18.0.1
 2018-03-27
 * add class ComponentField with regex parser using regex101.com

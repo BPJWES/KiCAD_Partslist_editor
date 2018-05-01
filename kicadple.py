@@ -282,8 +282,8 @@ class Schematic:
 		return self.subcircuits
 
 	def ModifyNewSCHFile(self, oldSCHFile, csvFile, savepath):
-		# this did break if the order is not FarnellLink; MouserLink; DigiKeyLink
-		# should be fixed now but am not sure
+		# TODO 1: don't call this multiple times, if it is referred multiple times in parent sheets!
+		# --> more efficient, avoid possible errors
 
 		# TODO 2: improve this messages: SCH and CSV parts should match
 		DT.info("Number of Parts in CSV: " + str(len(csvFile.components)))
@@ -339,15 +339,16 @@ class Schematic:
 								self.contents[comp.startPosition+comp.propertyList[property].relativeLine] += \
 									comp.propertyList[property].getContent()
 						# end for(all properties)
+					# end if components match
+				# end for all schematic components
+			#end for all csv components
 
 			try:
 				f = open(savepath, 'w')
-			except IOError:
-				return "error"
-			else:
-				for i in range (len(self.contents)):
-					f.write(self.contents[i])
-				f.close
+				f.writelines(self.contents)
+			except Exception as e:
+				print('Error: ' + e)
+				return str(e)
 
 			for i in range(len(self.subcircuits)):
 				newSavePath = os.path.join(os.path.dirname(savepath), self.namesOfSubcircuits[i])
@@ -566,7 +567,8 @@ class Component:
 					if not (componentRef == self.reference):
 						DT.info("L record value doesn't match 'F 0 ' record: "\
 							  + self.reference + " vs. " + componentRef + " in '" +\
-						  line + "' in file " + self.schematicName)
+						  line + "' in file " + self.schematicName + ". Using 'F 0' records value: " + componentRef)
+						self.reference = componentRef
 					continue
 				else:
 					DT.error("Regex Missmatch for 'F 0 '-record in line: " +\
@@ -770,7 +772,7 @@ class CsvComponent(object):
 						self.propertyList.append([anyField.name,Data])#convert to tuple
 
 
-
+# CsvFile class is used to read a given CSV file and build up the components list.
 class CsvFile(object):
 	def __init__(self):
 			self.contents = []
