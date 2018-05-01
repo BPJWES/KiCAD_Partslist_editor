@@ -1,13 +1,14 @@
 # KiCad Partslist Editor
 
-KiCad Partslist Editor (PLE) allows you to export/import customizable fields from a hierarchical KiCad schematic file to and from a CSV. 
+KiCad Partslist Editor (PLE) allows you to export/import customizable
+fields from a hierarchical KiCad schematic file to and from a CSV.
 
 * Load the root sheet of your project
 * export the CSV file
 * edit this CSV in your favourite spreadsheet editor (e.g. LibreOffice Calc)
-* backimport this CSV into KiCad PLE and save your changes then to your schematic file.
+* backimport this CSV into KiCad PLE and save your changes then to your schematic files.
 
-Tested with Python 3.5.2 on Linux Mint 18
+Tested with Python 3.5.2 on Linux Mint 18, with KiCad 4.0.7 and KiCad 5 (nightly)
 
 ![Screenshot](screenshot.png)
 
@@ -93,5 +94,5 @@ with 'auto-filter'
 * gives ability to sort the list and do a proper file comparison with
 diff after manipulations
 
-### Commanline Interface
+### Commandline Interface
 For scripting it would be nice, if the PLE could be used without any GUI.
