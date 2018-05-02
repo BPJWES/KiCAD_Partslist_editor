@@ -1,0 +1,6 @@
+Part;Reference;Unit;Value;Footprint;Datasheet;InternalName;File
+LM324;U101;3;LM324;;;;subsheet2.sch
+LM324;U101;2;LM324;;;;subsheet1.sch
+LM324;U101;1;LM324;;;;ple-test-multiple-units.sch
+LM358;U201;2;LM358;;;;subsheet2.sch
+LM358;U201;1;LM358;;;;subsheet1.sch
