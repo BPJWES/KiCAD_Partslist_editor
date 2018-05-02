@@ -3,6 +3,7 @@
 import os
 import re
 import globals
+import csv
 
 import debugtrace as DT
 
@@ -92,7 +93,7 @@ class Schematic:
 		self.subcircuits = [] # List of Schematic objects
 		self.schematicName = "" # file name
 		self.path = "" # file system path to this schematic file
-		self.fieldList = "" # list of KicadField objects
+		self.fieldList = "" # list of KicadField objects, given from the user defined FieldKeywords.conf
 
 	def setPath(self, path):
 		self.path = path
@@ -214,66 +215,47 @@ class Schematic:
 	#New variant which allows for user configurable field names
 		if not '.csv' in savepath:
 			savepath = savepath + '.csv'
-		try:
-			f = open(savepath, 'w')
-		except IOError:
-			if savepath:
-				return "error"
-		else:
-			line = ""
-			line += "Part"
-			line += globals.CsvSeparator
-			line += "Reference" # here we use the referenceUnique!!!
-			line += globals.CsvSeparator
-			line += "Unit"
-			line += globals.CsvSeparator
-			line += "Value"
-			line += globals.CsvSeparator
-			line += "Footprint"
-			line += globals.CsvSeparator
-			line += "Datasheet"
-			line += globals.CsvSeparator
-			for field in self.fieldList:
-				line += field.name
-				line += globals.CsvSeparator
-			line += ("File")
-			f.write(line + "\n")
 
+		csvHeaderNames = ["Index", "Part", "Reference", "Unit", "Value", "Footprint", "Datasheet"]
+		for field in self.fieldList:
+			csvHeaderNames.append(field.name)
+		csvHeaderNames.append("Schematic")
+
+
+		with open(savepath, 'w') as csvfile:
+			writer = csv.DictWriter(csvfile, fieldnames=csvHeaderNames, extrasaction='ignore', delimiter=globals.CsvSeparator, quotechar='"')
+			writer.writeheader()
+
+			index = 1
 			for item in range(len(self.components)):
 				component = self.components[item]
 				# skip export of unlisted components
-				if(component.unlisted == False):
-					line = ""
-					# TODO 2: add quotation marks for each entry (use csv library)
-					#Add Line with component and fields
-					line += component.name
-					line += globals.CsvSeparator
-					line += component.reference
-					line += globals.CsvSeparator
-					line += component.unit
-					line += globals.CsvSeparator
-					line += component.value
-					line += globals.CsvSeparator
-					line += component.footprint
-					line += globals.CsvSeparator
-					line += component.datasheet
-					line += globals.CsvSeparator
+				if (component.unlisted == False):
+					row = {}
+					row["Index"] = index
+					index += 1
 
+					row["Part"] = component.name
+					row["Reference"] = component.reference
+					row["Unit"] = component.unit
+					row["Value"] = component.value
+					row["Footprint"] = component.footprint
+					row["Datasheet"] = component.datasheet
 					for field in self.fieldList:
-					#match fields to component.field
+						# match fields to component.field
 						for counter in range(len(component.propertyList)):
 							if component.propertyList[counter].name == field.name:
-								line += component.propertyList[counter].value
-								line += globals.CsvSeparator
+								row[field] = component.propertyList[counter].value
 								break
 							else:
-								line += ""
+								row[field] = ""
+					row["File"] = component.schematicName
+					writer.writerow(row)
+				# end if is listed componenet
+			# end for all components
+			csvfile.close()
 
-					line += component.schematicName
-					f.write(line + "\n")
-				#endif
-			#endfor
-			f.close
+		# TODO 2: catch error on opening file and return "error"
 
 	def getSubCircuitName(self):
 		return self.namesOfSubcircuits
@@ -790,6 +772,31 @@ class CsvFile(object):
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self):
+
+        #
+        #
+        #
+		# # TODO 0
+		# with open('../../parts.csv', newline='\n') as csvfile:
+		# 	reader = csv.DictReader(csvfile, delimiter=';', quotechar='"')
+		# 	errCount = 0
+		# 	for row in reader:
+		# 		if row['InternalName'] not in parts:
+		# 			parts[row['InternalName']] = row
+		# 		else:
+		# 			eRow = parts[row['InternalName']]
+		# 			print('Error: Primary Key Conflict in parts.csv: ' + row['InternalName'] +
+		# 				  ', Description (' + eRow['Description'] + ') and (' + row['Description'] + '), line ' + str(
+		# 				reader.line_num))
+		# 			errCount += 1
+		# 	print('finished reading parts.csv: Lines (' + str(len(parts)) + ') and Errors (' + str(errCount) + ')')
+		# 	fieldsParts = reader.fieldnames
+		# 	csvfile.close()
+        #
+
+
+
+
 		if globals.CsvSeparator not in self.contents[1]:
 			return 'error: no delimiter found in CSV. ' + '"' + globals.CsvSeparator + '" expected. See config.ini'
 
