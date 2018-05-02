@@ -219,7 +219,7 @@ class Schematic:
 		csvHeaderNames = ["Index", "Part", "Reference", "Unit", "Value", "Footprint", "Datasheet"]
 		for field in self.fieldList:
 			csvHeaderNames.append(field.name)
-		csvHeaderNames.append("Schematic")
+		csvHeaderNames.append("File")
 
 
 		with open(savepath, 'w') as csvfile:
@@ -243,12 +243,12 @@ class Schematic:
 					row["Datasheet"] = component.datasheet
 					for field in self.fieldList:
 						# match fields to component.field
-						for counter in range(len(component.propertyList)):
-							if component.propertyList[counter].name == field.name:
-								row[field] = component.propertyList[counter].value
+						for prop in component.propertyList:
+							if prop.name == field.name:
+								row[prop.name] = prop.value
 								break
 							else:
-								row[field] = ""
+								row[prop.name] = ""
 					row["File"] = component.schematicName
 					writer.writerow(row)
 				# end if is listed componenet
