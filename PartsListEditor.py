@@ -286,22 +286,7 @@ def load_csv():
 
 	
 	if filename[-4:] == ".csv" or filename[-4:] == ".CSV":
-		try:
-			f = open(filename)
-		except IOError:
-			messagebox.showerror("File IO Error", "Cannot open CSV File " + filename)
-		else:
-			f.close()
-
-
-		if csvFile.components:
-			csvFile.deleteContents()
-
-		f = open(filename)
-
-		csvFile.setContents(f.readlines())
-
-		error = csvFile.extractCsvComponents()
+		error = csvFile.extractCsvComponents(filename)
 		if error:
 			messagebox.showerror("Incorrect Fileformat", error)
 		else:

@@ -757,98 +757,58 @@ class CsvComponent(object):
 # CsvFile class is used to read a given CSV file and build up the components list.
 class CsvFile(object):
 	def __init__(self):
-			self.contents = []
-			self.components = []
-			self.fieldList = []
-
-	def setContents(self, to_be_inserted):
-		self.contents = to_be_inserted
-
-	def printContents(self):
-		print(self.contents)
-
-	def printLine(self, line):
-		print(self.contents[line])
+		self.components = []
+		self.fieldList = []
+		self.MandatoryFields = ['Part', 'Reference', 'Unit', 'Value', 'Footprint', 'Datasheet', 'File']
 
 	# reads the content of the CSV and extracts the contained components
-	def extractCsvComponents(self):
+	def extractCsvComponents(self, filename: str):
+		self.components = []
+		self.fieldList = []
 
-        #
-        #
-        #
-		# # TODO 0
-		# with open('../../parts.csv', newline='\n') as csvfile:
-		# 	reader = csv.DictReader(csvfile, delimiter=';', quotechar='"')
-		# 	errCount = 0
-		# 	for row in reader:
-		# 		if row['InternalName'] not in parts:
-		# 			parts[row['InternalName']] = row
-		# 		else:
-		# 			eRow = parts[row['InternalName']]
-		# 			print('Error: Primary Key Conflict in parts.csv: ' + row['InternalName'] +
-		# 				  ', Description (' + eRow['Description'] + ') and (' + row['Description'] + '), line ' + str(
-		# 				reader.line_num))
-		# 			errCount += 1
-		# 	print('finished reading parts.csv: Lines (' + str(len(parts)) + ') and Errors (' + str(errCount) + ')')
-		# 	fieldsParts = reader.fieldnames
-		# 	csvfile.close()
-        #
+		with open(filename, newline='\n') as csvfile:
+			reader = csv.DictReader(csvfile, delimiter=globals.CsvSeparator, quotechar='"')
+			self.fieldList = reader.fieldnames
+
+			if len(reader.fieldnames) < 7:
+				return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
+
+			for c in reader.fieldnames:
+				new_csv_field = KicadField()
+				new_csv_field.name = c
+				self.fieldList.append(new_csv_field)
+
+			i = 0
+			for row in reader:
+				# TODO
+				# parse data belonging to component
+
+				newCsvComponent = CsvComponent()
+				newCsvComponent.Contents = self.contents[i]
 
 
-
-
-		if globals.CsvSeparator not in self.contents[1]:
-			return 'error: no delimiter found in CSV. ' + '"' + globals.CsvSeparator + '" expected. See config.ini'
-
-		# Find the order of the parameters saved in the csv
-		header = self.contents[0]
-		header = header.strip('\n')
-		header = header.strip('\r')
-		columnNames = header.split(globals.CsvSeparator)
-
-		if len(columnNames) < 7:
-			return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
-
-		for c in columnNames:
-			new_csv_field = KicadField()
-			new_csv_field.name = c
-			self.fieldList.append(new_csv_field)
-
-		#parse date belonging to component
-		for i in range(1, len(self.contents)):
-			newCsvComponent = CsvComponent()
-
-			dataLine = self.contents[i]
-			newCsvComponent.Contents = self.contents[i]
-
-			dataLine = dataLine.strip('\n')
-			dataLine = dataLine.strip('\r')
-			values = dataLine.split(globals.CsvSeparator)
-
-			column = 0
-			for value in values:
 				# TODO 3: replace these constants with a common definition in globals
-				if columnNames[column] == 'Part':
-					newCsvComponent.name = value
-				elif columnNames[column] == 'Reference':
-					newCsvComponent.reference = value
-				elif columnNames[column] == 'Unit':
-					newCsvComponent.unit = value
-				elif columnNames[column] == 'Value':
-					newCsvComponent.value = value
-				elif columnNames[column] == 'Footprint':
-					newCsvComponent.footprint = value
-				elif columnNames[column] == 'Datasheet':
-					newCsvComponent.datasheet = value
-				elif columnNames[column] == 'File':
-					newCsvComponent.schematic = value
-				else:
-					newCsvComponent.propertyList.append([self.fieldList[column], value])
+				newCsvComponent.name = row['Part']
+				newCsvComponent.reference = row['Reference']
+				newCsvComponent.unit = row['Unit']
+				newCsvComponent.value = row['Value']
+				newCsvComponent.footprint = row['Footprint']
+				newCsvComponent.datasheet = row['Datasheet']
+				newCsvComponent.schematic = row['File']
 
-				column += 1
-			# end for all values in dataLine
+				for key in row.keys():
+					if key not in self.MandatoryFields:
+						newCsvComponent.propertyList.append(key, row[key])
 
-			self.components.append(newCsvComponent)
+
+				self.components.append(newCsvComponent)
+
+			csvfile.close()
+
+
+
+
+
 
 		DT.info("finished component extractions")
 
