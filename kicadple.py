@@ -4,6 +4,7 @@ import os
 import re
 import globals
 import csv
+import copy
 
 import debugtrace as DT
 
@@ -310,7 +311,7 @@ class Schematic:
 								helper.value = comp.datasheet
 								self.contents[ii] = helper.getContent()
 
-						comp.updateAllMatchingFieldValues(csvFile.components[i].propertyList)
+						comp.updateAllMatchingFieldValues(csvFile.components[i].propertyDict)
 
 						for property in range(len(comp.propertyList)):
 							if comp.propertyList[property].exists:
@@ -668,14 +669,12 @@ class Component:
 				cf.name = anyField.name
 				self.propertyList.append(cf)
 
-	# Find all matching ComponentFild objects with the properties from the CSV,
+	# Find all matching ComponentField objects with the properties from the CSV,
 	# and update their values.
-	def updateAllMatchingFieldValues(self, csvPropertyList):
-		for csvProperty in csvPropertyList:
-			for schProperty in self.propertyList:
-				# TODO 2: strange csvProperty usage, should be fixed
-				if csvProperty[0].name == schProperty.name:  # matching property names
-					schProperty.value = csvProperty[1]  # copy CSV property data to SCH property
+	def updateAllMatchingFieldValues(self, csvPropertyDict: dict):
+		for schProperty in self.propertyList:
+			if schProperty.name in csvPropertyDict.keys():
+				schProperty.value = csvPropertyDict[schProperty.name]
 
 
 class CsvComponent(object):
@@ -689,8 +688,7 @@ class CsvComponent(object):
 		self.schematic = ""  # filename of the schematic (sub-) sheet
 
 		# refactor the field extraction
-		self.propertyList = []
-		self.Contents = ""
+		self.propertyDict = {}
 		self.fieldList = [];
 		self.fieldOrder = [];
 
@@ -733,33 +731,13 @@ class CsvComponent(object):
 	def getEndLine(self):
 		return self.endLine
 
-	def generateProperties(self):
-		#Check the contents of a component for Fields
-		for line_nr in range(len(self.Contents)):
-			for anyField in self.fieldList:
-				for Alias in anyField.Aliases:
-					if Alias in self.Contents[line_nr]:
-						#find content
-						testvar = 0
-						for i in range(len(self.Contents[line_nr])):
-							if self.Contents[line_nr][i] == "\"":
-								if testvar == 0:
-									startOfString = i+1
-									testvar = 1
-								else:
-									endOfString = i
-									break
-						Data = self.Contents[line_nr][startOfString:endOfString]
-
-						self.propertyList.append([anyField.name,Data])#convert to tuple
-
 
 # CsvFile class is used to read a given CSV file and build up the components list.
 class CsvFile(object):
 	def __init__(self):
 		self.components = []
 		self.fieldList = []
-		self.MandatoryFields = ['Part', 'Reference', 'Unit', 'Value', 'Footprint', 'Datasheet', 'File']
+		self.MandatoryFields = ('Part', 'Reference', 'Unit', 'Value', 'Footprint', 'Datasheet', 'File')
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self, filename: str):
@@ -768,7 +746,6 @@ class CsvFile(object):
 
 		with open(filename, newline='\n') as csvfile:
 			reader = csv.DictReader(csvfile, delimiter=globals.CsvSeparator, quotechar='"')
-			self.fieldList = reader.fieldnames
 
 			if len(reader.fieldnames) < 7:
 				return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
@@ -778,14 +755,18 @@ class CsvFile(object):
 				new_csv_field.name = c
 				self.fieldList.append(new_csv_field)
 
-			i = 0
+			# get property field names:
+			propertyFieldNames = copy.deepcopy(reader.fieldnames)
+			for mand in self.MandatoryFields:
+				propertyFieldNames.remove(mand)
+			if 'Index' in propertyFieldNames:
+				propertyFieldNames.remove('Index')
+
+			DT.info('Property field names in CSV: ' + str(propertyFieldNames))
+
 			for row in reader:
-				# TODO
 				# parse data belonging to component
-
 				newCsvComponent = CsvComponent()
-				newCsvComponent.Contents = self.contents[i]
-
 
 				# TODO 3: replace these constants with a common definition in globals
 				newCsvComponent.name = row['Part']
@@ -796,20 +777,12 @@ class CsvFile(object):
 				newCsvComponent.datasheet = row['Datasheet']
 				newCsvComponent.schematic = row['File']
 
-				for key in row.keys():
-					if key not in self.MandatoryFields:
-						newCsvComponent.propertyList.append(key, row[key])
-
+				for key in propertyFieldNames:
+					newCsvComponent.propertyDict[key] = row[key]
 
 				self.components.append(newCsvComponent)
 
 			csvfile.close()
-
-
-
-
-
-
 		DT.info("finished component extractions")
 
 	def deleteContents(self):
