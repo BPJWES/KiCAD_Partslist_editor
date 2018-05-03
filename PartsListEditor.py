@@ -17,7 +17,7 @@ import globals
 
 DT.setLevel(4)
 
-version = "18.0.3 - dev"
+version = "18.0.3"
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
@@ -81,13 +81,9 @@ def load_schematic():
 	if config.has_section('main') == FALSE:
 		config.add_section('main')
 	config.set('main', 'lastDirectory', os.path.dirname(filename))
-
-	globals.CsvSeparator = config.get('main', 'csvSeparator', fallback=",")
-	if globals.CsvSeparator is ",":
-		config.set('main', 'csvSeparator', globals.CsvSeparator)
-
 	with open('config.ini', 'w') as f:
 		config.write(f)
+		f.close()
 
 	
 	if filename[-4:] == ".sch" or filename[-4:] == ".SCH":
@@ -276,11 +272,6 @@ def load_csv():
 	if config.has_section('main') == FALSE:
 		config.add_section('main')
 	config.set('main', 'lastDirectory', os.path.dirname(filename))
-
-	globals.CsvSeparator = config.get('main', 'csvSeparator', fallback=",")
-	if globals.CsvSeparator is ",":
-		config.set('main', 'csvSeparator', globals.CsvSeparator)
-
 	with open('config.ini', 'w') as f:
 		config.write(f)
 
@@ -339,6 +330,25 @@ def show_about_dialog():
 						"Written by BPJWES, 2016\n" +
 						"and Karl Zeilhofer, 2017-2018\n" +
 						"https://github.com/BPJWES/KiCAD_Partslist_editor")
+
+
+
+def getCsvSeparator():
+	config = ConfigParser()
+	config.read('config.ini')
+
+	globals.CsvSeparator = config.get('main', 'csvSeparator', fallback=",")
+	if globals.CsvSeparator is ",":
+		config.set('main', 'csvSeparator', globals.CsvSeparator)
+
+	with open('config.ini', 'w') as f:
+		config.write(f)
+		f.close()
+
+
+
+
+getCsvSeparator()
 
 root = Tk()
 

@@ -222,41 +222,41 @@ class Schematic:
 			csvHeaderNames.append(field.name)
 		csvHeaderNames.append("File")
 
+		try:
+			with open(savepath, 'w') as csvfile:
+				writer = csv.DictWriter(csvfile, fieldnames=csvHeaderNames, extrasaction='ignore', delimiter=globals.CsvSeparator, quotechar='"')
+				writer.writeheader()
 
-		with open(savepath, 'w') as csvfile:
-			writer = csv.DictWriter(csvfile, fieldnames=csvHeaderNames, extrasaction='ignore', delimiter=globals.CsvSeparator, quotechar='"')
-			writer.writeheader()
+				index = 1
+				for item in range(len(self.components)):
+					component = self.components[item]
+					# skip export of unlisted components
+					if (component.unlisted == False):
+						row = {}
+						row["Index"] = index
+						index += 1
 
-			index = 1
-			for item in range(len(self.components)):
-				component = self.components[item]
-				# skip export of unlisted components
-				if (component.unlisted == False):
-					row = {}
-					row["Index"] = index
-					index += 1
-
-					row["Part"] = component.name
-					row["Reference"] = component.reference
-					row["Unit"] = component.unit
-					row["Value"] = component.value
-					row["Footprint"] = component.footprint
-					row["Datasheet"] = component.datasheet
-					for field in self.fieldList:
-						# match fields to component.field
-						for prop in component.propertyList:
-							if prop.name == field.name:
-								row[prop.name] = prop.value
-								break
-							else:
-								row[prop.name] = ""
-					row["File"] = component.schematicName
-					writer.writerow(row)
-				# end if is listed componenet
-			# end for all components
-			csvfile.close()
-
-		# TODO 2: catch error on opening file and return "error"
+						row["Part"] = component.name
+						row["Reference"] = component.reference
+						row["Unit"] = component.unit
+						row["Value"] = component.value
+						row["Footprint"] = component.footprint
+						row["Datasheet"] = component.datasheet
+						for field in self.fieldList:
+							# match fields to component.field
+							for prop in component.propertyList:
+								if prop.name == field.name:
+									row[prop.name] = prop.value
+									break
+								else:
+									row[prop.name] = ""
+						row["File"] = component.schematicName
+						writer.writerow(row)
+					# end if is listed componenet
+				# end for all components
+				csvfile.close()
+		except EnvironmentError as e:
+			return str(e)
 
 	def getSubCircuitName(self):
 		return self.namesOfSubcircuits
@@ -741,48 +741,51 @@ class CsvFile(object):
 
 	# reads the content of the CSV and extracts the contained components
 	def extractCsvComponents(self, filename: str):
-		self.components = []
-		self.fieldList = []
+		self.deleteContents()
 
-		with open(filename, newline='\n') as csvfile:
-			reader = csv.DictReader(csvfile, delimiter=globals.CsvSeparator, quotechar='"')
+		try:
+			with open(filename, newline='\n') as csvfile:
+				reader = csv.DictReader(csvfile, delimiter=globals.CsvSeparator, quotechar='"')
 
-			if len(reader.fieldnames) < 7:
-				return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
+				if len(reader.fieldnames) < 7:
+					return 'error: missing delimiter(s) in CSV. ' + 'At least 7 occurrences of "' + globals.CsvSeparator + '" expected. See config.ini'
 
-			for c in reader.fieldnames:
-				new_csv_field = KicadField()
-				new_csv_field.name = c
-				self.fieldList.append(new_csv_field)
+				for c in reader.fieldnames:
+					new_csv_field = KicadField()
+					new_csv_field.name = c
+					self.fieldList.append(new_csv_field)
 
-			# get property field names:
-			propertyFieldNames = copy.deepcopy(reader.fieldnames)
-			for mand in self.MandatoryFields:
-				propertyFieldNames.remove(mand)
-			if 'Index' in propertyFieldNames:
-				propertyFieldNames.remove('Index')
+				# get property field names:
+				propertyFieldNames = copy.deepcopy(reader.fieldnames)
+				for mand in self.MandatoryFields:
+					propertyFieldNames.remove(mand)
+				if 'Index' in propertyFieldNames:
+					propertyFieldNames.remove('Index')
 
-			DT.info('Property field names in CSV: ' + str(propertyFieldNames))
+				DT.info('Property field names in CSV: ' + str(propertyFieldNames))
 
-			for row in reader:
-				# parse data belonging to component
-				newCsvComponent = CsvComponent()
+				for row in reader:
+					# parse data belonging to component
+					newCsvComponent = CsvComponent()
 
-				# TODO 3: replace these constants with a common definition in globals
-				newCsvComponent.name = row['Part']
-				newCsvComponent.reference = row['Reference']
-				newCsvComponent.unit = row['Unit']
-				newCsvComponent.value = row['Value']
-				newCsvComponent.footprint = row['Footprint']
-				newCsvComponent.datasheet = row['Datasheet']
-				newCsvComponent.schematic = row['File']
+					# TODO 3: replace these constants with a common definition in globals
+					newCsvComponent.name = row['Part']
+					newCsvComponent.reference = row['Reference']
+					newCsvComponent.unit = row['Unit']
+					newCsvComponent.value = row['Value']
+					newCsvComponent.footprint = row['Footprint']
+					newCsvComponent.datasheet = row['Datasheet']
+					newCsvComponent.schematic = row['File']
 
-				for key in propertyFieldNames:
-					newCsvComponent.propertyDict[key] = row[key]
+					for key in propertyFieldNames:
+						newCsvComponent.propertyDict[key] = row[key]
 
-				self.components.append(newCsvComponent)
+					self.components.append(newCsvComponent)
 
-			csvfile.close()
+				csvfile.close()
+		except EnvironmentError as e:
+			return str(e)
+
 		DT.info("finished component extractions")
 
 	def deleteContents(self):
@@ -790,12 +793,6 @@ class CsvFile(object):
 			del self.components[0]
 		self.contents = []
 		self.components = []
-		#break
-
-
-
-
-
 
 
 

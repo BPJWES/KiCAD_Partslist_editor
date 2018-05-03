@@ -5,7 +5,7 @@ os.environ['TCL_LIBRARY'] = r'C:\Users\berjan\AppData\Local\Programs\Python\Pyth
 os.environ['TK_LIBRARY'] = r'C:\Users\berjan\AppData\Local\Programs\Python\Python36-32\tcl\tk8.6'
 
 setup(name = 'KiCAD_PLE',
-		version = '18.0.2',
+		version = '18.0.3',
 		description = 'Partslist Editor',
 		executables = [Executable("PartsListEditor.py")])
 	
