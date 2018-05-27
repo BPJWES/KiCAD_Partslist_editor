@@ -17,7 +17,7 @@ import globals
 
 DT.setLevel(4)
 
-version = "18.0.3"
+version = "18.0.4-dev"
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()
@@ -38,6 +38,7 @@ def read_settings():
 		for line in range(1, len(configfile)-1):
 			initPos =1
 			newField = kicadple.KicadField()
+			# TODO 2: this will fail for lines with \r\n (windows style)
 			if configfile[line][0] == "<" and configfile[line][-2] == ">":
 				endPos = configfile[line].find("|");
 				
@@ -53,9 +54,8 @@ def read_settings():
 					
 				newField.appendAlias(configfile[line][initPos+1:-2])
 				
-			global fieldList
-			fieldList.append(newField)
-			
+				global fieldList
+				fieldList.append(newField)
 		
 	else:
 		DT.error("incorrect config file")

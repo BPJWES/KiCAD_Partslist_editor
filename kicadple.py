@@ -29,7 +29,7 @@ class ComponentField:
 
 	# parses the content-line and extracts name, value and number
 	def setContent(self, content):
-		searchResult = re.search('F +(\d+) +"([^"]*)" +([HV] [0-9 A-Z]*[BN])(.*)?', content)
+		searchResult = re.search('F +(\d+) +"([^"]*)" +([HV] [+\-0-9 A-Z]*[BN])(.*)?', content)
 			# group 1: field number
 			# group 2: field value (without double quotes)
 			# group 3: field properties (without leading or trailing spaces)
@@ -50,7 +50,7 @@ class ComponentField:
 					self.name = ""
 
 
-			searchResult = re.search('([HV]) +([\d]+) +([\d]+) +([\d]+) +([\d]+) ([LRCBT]) ([LRCBT][IN][BN])', self._fieldProperties)
+			searchResult = re.search('([HV]) +([+\-]?[\d]+) +([+\-]?[\d]+) +([+\-]?[\d]+) +([+\-]?[\d]+) ([LRCBT]) ([LRCBT][IN][BN])', self._fieldProperties)
 			if searchResult:
 				self.orientation = searchResult.group(1)
 				self.xPos = int(searchResult.group(2))
