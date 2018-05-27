@@ -9,6 +9,8 @@ Changelog for the KiCad Partslist Editor
 # V18.0.4-dev:
 * support for negative coordinates (fixed regex)
 * fixed major bug in read_settings()
+* fixed major bug in exportCsvFile(), with non existing multiple properties
+  first property was set always to ""
 
 
 # V18.0.3:

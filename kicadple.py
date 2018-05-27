@@ -84,8 +84,9 @@ class ComponentField:
 # The Schematic class
 # holds its filename and all the subcircuits.
 # The components in this schematic are also stored here.
-# The main methods are parseSubCircuits (to get the hierarchical schematic tree)
-# and the parseComponents, which extracts the components of this single schematic.
+# The main methods are parseSubCircuits() (to get the hierarchical schematic tree),
+# parseComponents(), which extracts the components of this single schematic and
+# exportCsvFile()
 class Schematic:
 	def __init__(self):
 		self.contents = "" # list of all text lines in the schematic
@@ -246,10 +247,10 @@ class Schematic:
 							# match fields to component.field
 							for prop in component.propertyList:
 								if prop.name == field.name:
-									row[prop.name] = prop.value
+									row[field.name] = prop.value
 									break
 								else:
-									row[prop.name] = ""
+									row[field.name] = ""
 						row["File"] = component.schematicName
 						writer.writerow(row)
 					# end if is listed componenet
