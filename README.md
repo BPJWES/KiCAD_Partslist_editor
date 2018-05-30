@@ -80,6 +80,11 @@ The amount of aliases which can be added is theoretically unlimited, but
 ``` <MyFieldName> ``` isn't supported, one has to declare it with an alias:  
 ``` <MyFieldName|MyFieldName> ```
 
+The separator for CSV files can be set in the file `config.ini`.
+Double quoted fields are used in the CSV, if necessary (if it contains the separator).
+
+## Limitations
+* Currently it is not allowed to use double quotes in KiCads field names or field values
 
 ## Further Ideas for Improvement
 ### Extract Field Names from Schematics and CSV

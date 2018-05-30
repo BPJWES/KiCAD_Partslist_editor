@@ -2,8 +2,25 @@ Changelog for the KiCad Partslist Editor
 ========================================
 
 ## TODOs
-* use CSV lib
+* support correct double quote escaping.
+  Kicad uses `\"` within a fields value, but pythons csv reader/writer
+  uses `""` to represent a `"` within a field.
 
+# V18.0.4:
+* support for negative coordinates (fixed regex)
+* fixed major bug in read_settings()
+* fixed major bug in exportCsvFile(), with non existing multiple properties
+  first property was set always to ""
+
+
+# V18.0.3:
+2018-05-03
+* use pythons csv module for CSV IO
+  --> supports quoted fields in CSV, KiCad field values can now contain the separator
+* add index column, so a modified CSV file can be sorted again before saving it (great
+  if used with Git for version control and Git diff).
+* minor refactoring: use a dict instead of a list with 2 entries for
+  `CsvComponent.propertyList` which is now called `propertyDict`
 
 # V18.0.2:
 2018-05-01
