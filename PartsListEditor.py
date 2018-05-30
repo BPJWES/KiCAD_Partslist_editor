@@ -17,7 +17,7 @@ import globals
 
 DT.setLevel(4)
 
-version = "18.0.4-dev"
+version = "18.0.4"
 
 mainSchematicFile = kicadple.Schematic()
 csvFile = kicadple.CsvFile()

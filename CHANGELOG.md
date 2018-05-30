@@ -6,7 +6,7 @@ Changelog for the KiCad Partslist Editor
   Kicad uses `\"` within a fields value, but pythons csv reader/writer
   uses `""` to represent a `"` within a field.
 
-# V18.0.4-dev:
+# V18.0.4:
 * support for negative coordinates (fixed regex)
 * fixed major bug in read_settings()
 * fixed major bug in exportCsvFile(), with non existing multiple properties
