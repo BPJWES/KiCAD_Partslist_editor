@@ -198,7 +198,7 @@ class Schematic:
 					subSchematic.fieldList = self.fieldList
 					subSchematic.ParseComponents()
 
-					#  TODO 2: fix this bad styple: each schematic should hold it's own components only.
+					#  TODO 2: fix this bad style: each schematic should hold it's own components only.
 					# and not all components of all sub and subsubsheets.
 					# see also exportCsvFile()
 					self.components.extend(subSchematic.components)
@@ -242,7 +242,7 @@ class Schematic:
 			for item in range(len(self.components)):
 				component = self.components[item]
 				# skip export of unlisted components
-				if(component.unlisted == False):
+				if(component.unlisted == False):				
 					line = ""
 					# TODO 2: add quotation marks for each entry (use csv library)
 					#Add Line with component and fields
@@ -261,13 +261,14 @@ class Schematic:
 
 					for field in self.fieldList:
 					#match fields to component.field
-						for counter in range(len(component.propertyList)):
-							if component.propertyList[counter].name == field.name:
-								line += component.propertyList[counter].value
-								line += globals.CsvSeparator
+						for property in component.propertyList:
+							if field.MatchField(property.name):
+								line += property.value
 								break
 							else:
 								line += ""
+						
+						line += globals.CsvSeparator
 
 					line += component.schematicName
 					f.write(line + "\n")
@@ -599,7 +600,7 @@ class Component:
 
 			# Footprint, Example:
 			# F 2 "standardSMD:R0603" V 5680 2000 50  0001 C CNN
-			if "F 2 " in line:  # find f1 indicating value field in EEschema file format
+			if "F 2 " in line:  # find f2 indicating Footprint field in EEschema file format
 				if line_nr > lastExistingFieldLine:
 					lastExistingFieldLine = line_nr
 
@@ -618,7 +619,7 @@ class Component:
 			#
 			# Datasheet; Example:
 			# F 3 "" H 5750 2000 50  0000 C CNN
-			if "F 3 " in line:  # find f1 indicating value field in EEschema file format
+			if "F 3 " in line:  # find f3 indicating Datasheet field in EEschema file format
 				if line_nr > lastExistingFieldLine:
 					lastExistingFieldLine = line_nr
 
@@ -635,56 +636,62 @@ class Component:
 						  line + "' in file " + self.schematicName)
 				# end if
 				# endif F 3
+			else:
+				# Custom Fields, Example:
+				# F 4 "C3216-100n-50V" H 8450 6050 60  0001 C CNN "InternalName"
+			
+				searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
+				if searchResult:
+					if line_nr > lastExistingFieldLine:
+						lastExistingFieldLine = line_nr
 
-			# Custom Fields, Example:
-			# F 4 "C3216-100n-50V" H 8450 6050 60  0001 C CNN "InternalName"
-			searchResult = re.search('F +([0-9]+) +"(.*)" +.*"(.*)".*', line)
+					fieldNr = int(searchResult.group(1))
+					if fieldNr > maxFieldNr:
+						maxFieldNr = fieldNr
 
-			if searchResult:
-				if line_nr > lastExistingFieldLine:
-					lastExistingFieldLine = line_nr
-
-				fieldNr = int(searchResult.group(1))
-				if fieldNr > maxFieldNr:
-					maxFieldNr = fieldNr
-
-				fieldValue = searchResult.group(2)
-				fieldName = searchResult.group(3)
-
-				tempFound = False
-				for anyField in self.fieldList:
-					for Alias in anyField.Aliases:
-						if Alias == fieldName:
-							if fieldFound[anyField] is True:
-								DT.warning("duplicate definition of Field " + fieldName + " with Alias " + Alias
-									  + " for Component " + self.getReference()
-									  + " in file " + self.schematicName)
-							fieldFound[anyField] = True
-							tempFound = True
-							cf = ComponentField()
-							cf.setContent(line)
-							cf.relativeLine = line_nr
-							self.propertyList.append(cf) 
+					fieldValue = searchResult.group(2)
+					fieldName = searchResult.group(3)
+					print(fieldValue)
+					print(fieldName)
+					tempFound = False
+					for anyField in self.fieldList:
+						for Alias in anyField.Aliases:
+							if Alias == fieldName:
+								if fieldFound[anyField] is True:
+									DT.warning("duplicate definition of Field " + fieldName + " with Alias " + Alias
+										  + " for Component " + self.getReference()
+										  + " in file " + self.schematicName)
+								fieldFound[anyField] = True
+								tempFound = True
+								cf = ComponentField()
+								cf.setContent(line)
+								cf.relativeLine = line_nr
+								self.propertyList.append(cf) 
+								print(fieldName + "added to propertylist ")
+								
+								break
+						if tempFound == True:
 							break
 					if tempFound == True:
-						break
-				if tempFound == True:
-					continue
-			#endif Regex
-		#end for(all lines)
+						continue
+				#endif Regex
+			#end for(all lines)
 
 		# set default values for non-found fields:
-		for anyField in self.fieldList:
-			if fieldFound[anyField] == False:
-				cf = ComponentField() # TODO 0: set template line here
-				cf.setContent(fieldTemplate)
-				cf.visibility = '0001'
-				cf.number = maxFieldNr+1
-				maxFieldNr += 1
-				cf.relativeLine = lastExistingFieldLine
-				cf.exists = False
-				cf.name = anyField.name
-				self.propertyList.append(cf)
+		
+		
+		#for anyField in self.fieldList:
+		#	if fieldFound[anyField] == False:
+		#		print(anyField.name)
+		#		cf = ComponentField() # TODO 0: set template line here
+		#		cf.setContent(fieldTemplate) #this is broken for empty fields will result in datasheet values being added to fields/keywords which cannot be found
+		#		cf.visibility = '0001'
+		#		cf.number = maxFieldNr+1
+		#		maxFieldNr += 1
+		#		cf.relativeLine = lastExistingFieldLine
+		#		cf.exists = False
+		#		cf.name = anyField.name
+		#		self.propertyList.append(cf)
 
 	# Find all matching ComponentFild objects with the properties from the CSV,
 	# and update their values.
@@ -720,6 +727,7 @@ class CsvComponent(object):
 		print(self.footprint)
 		print(self.datasheet)
 		print(self.schematic)
+		print(self.propertyList)
 
 	def setName(self,name):
 		self.name = name
@@ -868,6 +876,14 @@ class KicadField(object):
 
 	def appendAlias(self,newAlias):
 		self.Aliases.append(newAlias)
-
-
+	def MatchField(self, stringToMatch):
+		if stringToMatch == self.name:
+			return True
+		else:
+			for Alias in self.Aliases:
+				if stringToMatch == Alias:
+					return True
+					break
+			else:
+				return False
 
